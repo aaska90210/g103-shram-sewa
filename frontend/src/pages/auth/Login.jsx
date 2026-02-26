@@ -1,39 +1,79 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock } from 'react-icons/fa';
+import axios from 'axios';
+import toast from 'react-hot-toast'; // Import toaster
+
 import './AuthStyles.css';
 
 // Login Page Component
 const Login = () => {
-    const [identifier, setIdentifier] = useState('');
+    const navigate = useNavigate(); // Helper to change pages
+    const [identifier, setIdentifier] = useState(''); // This is the email
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    // We don't need a local error state anymore, we use toast directly 
+    // const [error, setError] = useState(''); 
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // 1. Simple validation
         if (!identifier || !password) {
-            setError('Please fill in all fields.');
+            toast.error('Please fill in all fields.');
             return;
         }
-        setError('');
-        console.log('Login Attempt:', { identifier, password });
-        alert('Logged in (simulated)!');
+
+        try {
+            // 2. Send data to backend
+            // We use axios to make the POST request
+            const response = await axios.post('http://localhost:5000/api/auth/login', {
+                email: identifier,
+                password: password
+            });
+
+            // 3. If successful, we get data back
+            const { token, role, user } = response.data;
+
+            // 4. Show success message
+            toast.success(`Welcome back, ${user.fullName}!`);
+
+            // 5. Store token (so we stay logged in) - Optional for this demo but good practice
+            localStorage.setItem('token', token);
+            localStorage.setItem('role', role);
+
+            // 6. Redirect based on role
+            if (role === 'Client') {
+                navigate('/hirer/dashboard');
+            } else if (role === 'Freelancer') {
+                navigate('/worker/dashboard');
+            } else {
+                toast.error('Unknown role, contact support.');
+            }
+
+        } catch (err) {
+            // 7. Handle errors
+            console.error(err);
+            // If backend sends an error message, show it. Otherwise show generic error.
+            const message = err.response?.data?.message || 'Login failed. Please try again.';
+            toast.error(message);
+        }
     };
 
     return (
         <div className="auth-container" style={{ maxWidth: '400px' }}>
             <h2>Welcome Back</h2>
 
-            {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+            {/* We removed the error paragraph because we use toast now */}
 
             <form onSubmit={handleSubmit}>
 
-                {/* Identifier Input (Email/Phone) */}
+                {/* Identifier Input (Email) */}
                 <div className="input-box">
                     <span className="icon"><FaUser /></span>
                     <input
-                        type="text"
-                        placeholder="Email or Phone Number"
+                        type="email" // Changed to email type for better validation
+                        placeholder="Email Address"
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
                         required

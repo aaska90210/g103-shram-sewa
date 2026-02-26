@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaPhone, FaEnvelope, FaLock, FaBriefcase, FaBuilding } from 'react-icons/fa';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
 import './AuthStyles.css';
 
-// This is the Professional Register Page component.
-// It handles user registration with a role toggle (Client vs. Freelancer).
+// Register page (Client / Freelancer)
 const Register = () => {
-    // --- STATE MANAGEMENT ---
-    // checking the role to switch UI elements dynamically
+    const navigate = useNavigate();
+
+    // state
     const [role, setRole] = useState('Client');
 
-    // Object to store all form input values for cleaner state management
+    // form state
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
@@ -19,26 +22,45 @@ const Register = () => {
         skill: '', // Only for Freelancer
     });
 
-    // Handle Input Changes
-    // We use this function to update the specific field in our formData object
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle Form Submission
-    const handleSubmit = (e) => {
+    // submit handler
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Registration Data:', { role, ...formData });
-        alert(`Registration Successful as ${role}! Check console for data.`);
+
+        // prepare payload (backend expects fullName, email, password, role)
+        const payload = {
+            fullName: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            role: role,
+            // phone: formData.phone, // Sending just in case backend is updated later
+            // skill: role === 'Freelancer' ? formData.skill : undefined
+        };
+
+        try {
+            // send request
+            const response = await axios.post('http://localhost:5000/api/auth/register', payload);
+
+            toast.success('Registration Successful!');
+            navigate('/login');
+
+        } catch (err) {
+            console.error(err);
+            const message = err.response?.data?.message || 'Registration failed.';
+            toast.error(message);
+        }
     };
 
     return (
         <div className="auth-container" style={{ maxWidth: '450px' }}>
             <h2>Create Account</h2>
 
-            {/* --- ROLE TOGGLE SECTION --- */}
+            {/* role toggle */}
             <div className="role-toggle">
-                {/* Toggle button for Client (Employer) */}
+                {/* Client */}
                 <button
                     type="button"
                     className={`role-btn ${role === 'Client' ? 'active' : ''}`}
@@ -48,7 +70,7 @@ const Register = () => {
                     Client
                 </button>
 
-                {/* Toggle button for Freelancer (Worker) */}
+                {/* Freelancer */}
                 <button
                     type="button"
                     className={`role-btn ${role === 'Freelancer' ? 'active' : ''}`}
@@ -59,17 +81,17 @@ const Register = () => {
                 </button>
             </div>
 
-            {/* --- DYNAMIC INFO TEXT --- */}
+            {/* helper text */}
             <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: '#666' }}>
                 {role === 'Client'
                     ? 'You are registering as an Employer to hire talent.'
                     : 'You are registering as a Freelancer to offer services.'}
             </p>
 
-            {/* --- REGISTRATION FORM --- */}
+            {/* registration form */}
             <form onSubmit={handleSubmit}>
 
-                {/* Full Name Input with Icon */}
+                {/* full name */}
                 <div className="input-box">
                     <span className="icon"><FaUser /></span>
                     <input
@@ -82,7 +104,7 @@ const Register = () => {
                     />
                 </div>
 
-                {/* Phone Input with Icon */}
+                {/* phone */}
                 <div className="input-box">
                     <span className="icon"><FaPhone /></span>
                     <input
@@ -95,7 +117,7 @@ const Register = () => {
                     />
                 </div>
 
-                {/* Email Input with Icon */}
+                {/* email */}
                 <div className="input-box">
                     <span className="icon"><FaEnvelope /></span>
                     <input
@@ -108,7 +130,7 @@ const Register = () => {
                     />
                 </div>
 
-                {/* CONDITIONAL RENDER: Primary Skill (Only for Freelancer) */}
+                {/* skill (freelancer only) */}
                 {role === 'Freelancer' && (
                     <div className="input-box">
                         <span className="icon"><FaBriefcase /></span>
@@ -131,7 +153,7 @@ const Register = () => {
                     </div>
                 )}
 
-                {/* Password Input with Icon */}
+                {/* password */}
                 <div className="input-box">
                     <span className="icon"><FaLock /></span>
                     <input
@@ -144,13 +166,13 @@ const Register = () => {
                     />
                 </div>
 
-                {/* Submit Button */}
+                {/* submit */}
                 <button type="submit" className="submit-btn">
                     Register
                 </button>
             </form>
 
-            {/* --- LOGIN LINK --- */}
+            {/* login link */}
             <p style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
                 Already have an account? <Link to="/login" className="toggle-link" style={{ display: 'inline' }}>Login here</Link>
             </p>
