@@ -38,9 +38,10 @@ const Login = () => {
             // 4. Show success message
             toast.success(`Welcome back, ${user.fullName}!`);
 
-            // 5. Store token (so we stay logged in) - Optional for this demo but good practice
+            // 5. Store token and user data (so we stay logged in and can show user name)
             localStorage.setItem('token', token);
             localStorage.setItem('role', role);
+            localStorage.setItem('user', JSON.stringify({ name: user.fullName })); // Store user name for dashboard
 
             // 6. Redirect based on role
             if (role === 'Client') {

@@ -1,86 +1,105 @@
 :root {
-  /* Define our Color Palette variables */
-  --bg-pink: #FDB3C2;      /* Lightest Pink for Backgrounds */
-  --border-pink: #E56D85;  /* Medium Pink for Borders */
-  --btn-red: #A41F39;      /* Deepest Red for Buttons and Headings */
+  --bg-pink: #FDB3C2;
+  --border-pink: #E56D85;
+  --btn-red: #A41F39;
   --text-dark: #333333;
   --white: #ffffff;
+}
+
+/* Global styles - Professional off-white background */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--bg-pink); /* Using the Lightest Pink background */
+  background-color: #F9FAFB; /* Professional off-white background */
   color: var(--text-dark);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Auth pages wrapper - Centered layout for login/register */
+.app-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  background-color: var(--bg-pink); /* Pink background only for auth pages */
 }
 
-/* Container for our card */
+/* Auth pages specific styles */
 .auth-container {
   background-color: var(--white);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
   text-align: center;
 }
 
-h2 {
+.auth-container h2 {
   color: var(--btn-red);
   margin-bottom: 1.5rem;
 }
 
-/* Form Styles */
 .form-group {
   margin-bottom: 1rem;
   text-align: left;
 }
 
-label {
+.form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--text-dark);
 }
 
-input {
+.form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--border-pink); /* Medium Pink border */
+  border: 2px solid var(--border-pink);
   border-radius: 8px;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  box-sizing: border-box;
   font-size: 1rem;
   outline: none;
   transition: border-color 0.3s;
 }
 
-input:focus {
+.form-group input:focus {
   border-color: var(--btn-red);
 }
 
-/* Button Styles */
-button {
+.auth-container button {
   background-color: var(--btn-red);
   color: var(--white);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: heading;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   transition: opacity 0.3s;
 }
 
-button:hover {
+.auth-container button:hover {
   opacity: 0.9;
 }
 
-/* Toggle Role Buttons */
 .role-toggle {
   display: flex;
   gap: 1rem;
