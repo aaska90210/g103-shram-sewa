@@ -41,13 +41,19 @@ const Login = () => {
             // 5. Store token and user data (so we stay logged in and can show user name)
             localStorage.setItem('token', token);
             localStorage.setItem('role', role);
-            localStorage.setItem('user', JSON.stringify({ name: user.fullName })); // Store user name for dashboard
+            localStorage.setItem('user', JSON.stringify({ 
+                name: user.fullName, 
+                verificationStatus: user.verificationStatus,
+                isVerified: user.isVerified 
+            })); 
 
             // 6. Redirect based on role
             if (role === 'Client') {
                 navigate('/hirer/dashboard');
             } else if (role === 'Freelancer') {
                 navigate('/worker/dashboard');
+            } else if (role === 'Admin') {
+                navigate('/admin/dashboard');
             } else {
                 toast.error('Unknown role, contact support.');
             }

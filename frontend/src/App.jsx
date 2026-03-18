@@ -15,6 +15,13 @@ import MyApplications from './pages/freelancerDashboard/MyApplications';
 import ActiveTasks from './pages/freelancerDashboard/ActiveTasks';
 import Earnings from './pages/freelancerDashboard/Earnings';
 import FreelancerProfile from './pages/freelancerDashboard/FreelancerProfile';
+// Admin Imports
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import VerifyClients from './pages/admin/VerifyClients';
+import VerifyFreelancers from './pages/admin/VerifyFreelancers';
+import AllUsers from './pages/admin/AllUsers';
+
 import './App.css';
 
 function App() {
@@ -29,6 +36,14 @@ function App() {
         {/* auth routes */}
         <Route path="/login" element={<div className="app-container"><Login /></div>} />
         <Route path="/register" element={<div className="app-container"><Register /></div>} />
+
+        {/* admin routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="verify-clients" element={<VerifyClients />} />
+          <Route path="verify-freelancers" element={<VerifyFreelancers />} />
+          <Route path="users" element={<AllUsers />} />
+        </Route>
 
         {/* hirer routes with sidebar layout */}
         <Route path="/hirer" element={<HirerLayout />}>
