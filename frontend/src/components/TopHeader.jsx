@@ -1,23 +1,63 @@
-import { Search, Bell, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Bell, ChevronDown, BadgeCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const TopHeader = () => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const [userData, setUserData] = useState({ name: 'User', initial: 'U', isVerified: false });
 
-    // Get user data from localStorage (set during login/registration)
-    const getUserData = () => {
+    useEffect(() => {
+        // Initial load from localStorage
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (storedUser.name) {
+            setUserData({
+                name: storedUser.name,
+                initial: (storedUser.name || 'U')[0].toUpperCase(),
+                isVerified: storedUser.isVerified || false
+            });
+        }
+
+        // Fetch fresh data
+        fetchUserData();
+    }, []);
+
+    const fetchUserData = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            return {
-                name: user.name || 'User',
-                initial: (user.name || 'U')[0].toUpperCase()
-            };
-        } catch {
-            return { name: 'User', initial: 'U' };
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const res = await axios.get('http://localhost:5000/api/auth/me', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data) {
+                const user = {
+                    name: res.data.fullName,
+                    initial: (res.data.fullName || 'U')[0].toUpperCase(),
+                    isVerified: res.data.isVerified
+                };
+                setUserData(user);
+                
+                // Update localStorage to keep it fresh
+                localStorage.setItem('user', JSON.stringify({
+                    name: res.data.fullName,
+                    verificationStatus: res.data.verificationStatus,
+                    isVerified: res.data.isVerified
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch user data", error);
         }
     };
 
-    const { name, initial } = getUserData();
+    const { name, initial, isVerified } = userData;
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
 
     return (
         <header className="dashboard-header">
@@ -50,8 +90,13 @@ const TopHeader = () => {
                         <div className="header-profile-avatar">
                             {initial}
                         </div>
-                        <span className="header-profile-name">{name}</span>
-                        <ChevronDown />
+                        <span className="header-profile-name flex items-center gap-1">
+                            {name}
+                            {isVerified && (
+                                <BadgeCheck className="w-5 h-5 text-blue-500" />
+                            )}
+                        </span>
+                        <ChevronDown size={16} />
                     </button>
 
                     {/* dropdown menu */}
