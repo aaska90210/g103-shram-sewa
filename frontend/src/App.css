@@ -1,19 +1,7 @@
-/* ============================================
-   APP CONTAINER - AUTH PAGES
-   ============================================ */
-
+/* Cleaning up default styles to use our custom index.css design system */
 .app-container {
   width: 100%;
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--bg-pink);
-  padding: var(--spacing-xl);
-}
-
-/* Ensure auth pages are centered and have proper spacing */
-.app-container > * {
-  width: 100%;
-  max-width: 450px;
 }
