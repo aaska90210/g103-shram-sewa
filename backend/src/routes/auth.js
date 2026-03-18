@@ -2,8 +2,20 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+// Get current user (protected)
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+});
 
 // Register new user
 router.post("/register", async (req, res) => {
@@ -30,6 +42,21 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        // Check for Admin Login
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            const token = jwt.sign(
+                { id: "admin", role: "Admin" },
+                process.env.JWT_SECRET,
+                { expiresIn: "4h" }
+            );
+            return res.json({
+                token,
+                role: "Admin",
+                user: { id: "admin", fullName: "Administrator", email, role: "Admin" }
+            });
+        }
+
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
