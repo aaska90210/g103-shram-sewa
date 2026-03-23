@@ -69,9 +69,9 @@ const Login = () => {
 
     return (
         <div className="auth-container" style={{ maxWidth: '400px' }}>
-            <h2>Welcome Back</h2>
+            <h2>Welcome to Shram Sewa</h2>
 
-            {/* We removed the error paragraph because we use toast now */}
+            
 
             <form onSubmit={handleSubmit}>
 
