@@ -16,13 +16,26 @@ const AllUsers = () => {
     const fetchUsers = async () => {
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error("No authentication token found");
+                setLoading(false);
+                return;
+            }
+
+            console.log("Fetching users...");
             const res = await axios.get('http://localhost:5000/api/admin/users', {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log("Users fetched:", res.data);
             setUsers(res.data);
+            
+            if (res.data.length === 0) {
+                toast("No users found in the database.", { icon: 'ℹ️' });
+            }
         } catch (error) {
             console.error("Error fetching users", error);
-            toast.error("Failed to load users");
+            const msg = error.response?.data?.message || "Failed to load users";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
