@@ -21,6 +21,11 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(403).json({ message: 'Only clients can post jobs' });
         }
 
+        // Check if client is verified
+        if (req.user.verificationStatus !== 'Verified') {
+            return res.status(403).json({ message: 'Your account is not verified. Please wait for admin approval to post jobs.' });
+        }
+
         // Create new job
         const job = new Job({
             title,
@@ -311,6 +316,11 @@ router.post('/:id/apply', authMiddleware, async (req, res) => {
         // Check if user is a Freelancer
         if (req.user.role !== 'Freelancer') {
             return res.status(403).json({ message: 'Only freelancers can apply for jobs' });
+        }
+
+        // Check if freelancer is verified
+        if (req.user.verificationStatus !== 'Verified') {
+            return res.status(403).json({ message: 'Your account is not verified. Please wait for admin approval to apply for jobs.' });
         }
 
         // Check if user is the job owner
