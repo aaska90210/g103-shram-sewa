@@ -20,6 +20,11 @@ const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ message: 'User not found' });
         }
 
+        // Check if token version matches (force logout on password change)
+        if (decoded.tokenVersion !== user.tokenVersion) {
+            return res.status(401).json({ message: 'Session expired, please login again' });
+        }
+
         // Add user to request object
         req.user = user;
         next();
