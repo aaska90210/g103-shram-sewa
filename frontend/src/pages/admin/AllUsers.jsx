@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Trash2, Edit2, Lock, XCircle } from 'lucide-react';
+import { MdEdit, MdDelete, MdLock, MdClose } from 'react-icons/md';
 
 const AllUsers = () => {
     const [users, setUsers] = useState([]);
@@ -81,18 +81,18 @@ const AllUsers = () => {
     };
 
     return (
-        <div className="dashboard-container relative">
+        <div className="dashboard-container">
             {/* Modal for Password Change */}
             {editingUser && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000]">
-                    <div className="bg-white p-6 rounded-lg shadow-2xl w-96 transform transition-all scale-100">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
+                <div className="dashboard-modal-overlay">
+                    <div className="dashboard-modal-content">
+                        <div className="modal-header">
+                            <h3 className="modal-title">Change Password</h3>
                             <button 
                                 onClick={() => setEditingUser(null)} 
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="modal-close"
                             >
-                                <XCircle size={24} />
+                                <MdClose size={24} />
                             </button>
                         </div>
                         <p className="text-sm text-gray-600 mb-6">
@@ -100,31 +100,32 @@ const AllUsers = () => {
                         </p>
                         
                         <form onSubmit={submitPasswordChange}>
-                            <div className="mb-6">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">New Password</label>
-                                <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
-                                    <Lock size={18} className="text-gray-400 mr-3" />
+                            <div className="modal-form-group">
+                                <label className="modal-label">New Password</label>
+                                <div className="modal-input-wrapper">
+                                    <MdLock className="modal-input-icon" size={18} />
                                     <input 
                                         type="password" 
-                                        className="w-full outline-none text-gray-700 placeholder-gray-400 bg-transparent"
+                                        className="modal-input"
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        placeholder="Min. 6 characters"
+                                        placeholder="Enter new password (min. 6 chars)"
                                         autoFocus
+                                        autoComplete="new-password"
                                     />
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-3">
+                            <div className="modal-actions">
                                 <button 
                                     type="button" 
                                     onClick={() => setEditingUser(null)}
-                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                                    className="modal-btn-cancel"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     type="submit" 
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md shadow-blue-500/20"
+                                    className="modal-btn-confirm"
                                 >
                                     Update Password
                                 </button>
@@ -161,20 +162,20 @@ const AllUsers = () => {
                                         {getStatusBadge(user)}
                                     </td>
                                     <td>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             <button 
-                                                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                                                className="edit-action-btn"
                                                 onClick={() => handleEditPassClick(user)}
                                                 title="Change Password"
                                             >
-                                                <Edit2 size={18} />
+                                                <MdEdit size={18} />
                                             </button>
                                             <button 
-                                                className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                                                className="delete-action-btn"
                                                 onClick={() => deleteUser(user._id)}
                                                 title="Delete User"
                                             >
-                                                <Trash2 size={18} />
+                                                <MdDelete size={18} />
                                             </button>
                                         </div>
                                     </td>
