@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, Briefcase, Wallet, Users } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Briefcase, Wallet, Users, ShieldCheck, Clock } from 'lucide-react';
 
 // sidebar navigation links
 const navItems = [
@@ -17,14 +17,16 @@ const HirerSidebar = () => {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             return {
                 name: user.name || 'User',
-                initial: (user.name || 'U')[0].toUpperCase()
+                initial: (user.name || 'U')[0].toUpperCase(),
+                verificationStatus: user.verificationStatus || 'Pending'
             };
         } catch {
-            return { name: 'User', initial: 'U' };
+            return { name: 'User', initial: 'U', verificationStatus: 'Pending' };
         }
     };
 
-    const { name, initial } = getUserData();
+    const { name, initial, verificationStatus } = getUserData();
+    const isVerified = verificationStatus === 'Verified';
 
     return (
         <aside className="dashboard-sidebar">
@@ -56,8 +58,19 @@ const HirerSidebar = () => {
                         {initial}
                     </div>
                     <div className="sidebar-user-info">
-                        <p className="sidebar-user-name">{name}</p>
-                        <p className="sidebar-user-role">Client Account</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <p className="sidebar-user-name" style={{ marginBottom: 0 }}>{name}</p>
+                            {isVerified ? (
+                                <ShieldCheck size={16} color="#10B981" fill="#D1FAE5" className="verification-icon verified" title="Verified Account" />
+                            ) : (
+                                <Clock size={16} color="#F59E0B" className="verification-icon pending" title="Verification Pending" />
+                            )}
+                        </div>
+                        <p className="sidebar-user-role">
+                            Client • <span style={{ color: isVerified ? '#10B981' : '#F59E0B' }}>
+                                {isVerified ? 'Verified' : 'Pending'}
+                            </span>
+                        </p>
                     </div>
                 </div>
             </div>
