@@ -10,6 +10,10 @@ const FindWork = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
 
+    // Get user info for verification check
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isVerified = user.verificationStatus === 'Verified';
+
     // === Fetch Available Jobs ===
     // Gets all active jobs posted by clients
     useEffect(() => {
@@ -46,12 +50,19 @@ const FindWork = () => {
     const handleApply = async (jobId) => {
         try {
             const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
             
             if (!token) {
                 toast.error('Please login to apply for jobs');
                 return;
             }
 
+            if (user.verificationStatus !== 'Verified') {
+                toast.error('Account not verified. You cannot apply for jobs yet.');
+                return;
+            }
+
+            // Perform the API call to apply
             await axios.post(
                 `http://localhost:5000/api/jobs/${jobId}/apply`,
                 {},
@@ -185,9 +196,16 @@ const FindWork = () => {
                             <button
                                 onClick={() => handleApply(job._id)}
                                 className="worker-action"
-                                style={{ marginTop: '1rem' }}
+                                style={{ 
+                                    marginTop: '1rem',
+                                    opacity: isVerified ? 1 : 0.6,
+                                    cursor: isVerified ? 'pointer' : 'not-allowed',
+                                    backgroundColor: isVerified ? '' : '#ccc'
+                                }}
+                                disabled={!isVerified}
+                                title={!isVerified ? 'You must be verified to apply' : ''}
                             >
-                                Apply Now
+                                {isVerified ? 'Apply Now' : 'Verification Pending'}
                             </button>
                         </div>
                     ))}
