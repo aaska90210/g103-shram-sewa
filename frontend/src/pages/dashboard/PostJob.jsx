@@ -11,6 +11,11 @@ const NepaliRupeeIcon = () => (
 );
 
 const PostJob = () => {
+    // === User Verification Check ===
+    // Get user info from local storage to check verification status
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isVerified = user.verificationStatus === 'Verified';
+
     // === Form State ===
     // Tracks all input fields for the job posting form
     const [form, setForm] = useState({
@@ -33,6 +38,12 @@ const PostJob = () => {
     // Posts the job to backend API
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!isVerified) {
+            toast.error('You need to be verified to post jobs.');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -91,7 +102,35 @@ const PostJob = () => {
             {/* === Form Card === */}
             {/* Centered white card (60% width) for focused layout */}
             <div className="form-card">
-                <form onSubmit={handleSubmit}>
+                {!isVerified && (
+                    <div className="verification-alert" style={{
+                        padding: '1rem',
+                        marginBottom: '1.5rem',
+                        backgroundColor: '#fff3cd',
+                        color: '#856404',
+                        border: '1px solid #ffeeba',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                    }}>
+                        <div style={{ fontSize: '1.5rem' }}>⚠️</div>
+                        <div>
+                            <h4 style={{ margin: 0, fontWeight: 'bold' }}>Account Not Verified</h4>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.9rem' }}>
+                                You cannot post jobs until your account is verified by an admin. 
+                                <br/>
+                                Current Status: <strong>{user.verificationStatus || 'Pending'}</strong>
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} style={{ 
+                    opacity: isVerified ? 1 : 0.6, 
+                    pointerEvents: isVerified ? 'auto' : 'none',
+                    filter: isVerified ? 'none' : 'grayscale(100%)'
+                }}>
                     
                     {/* === Job Title Input (1-column layout) === */}
                     {/* Briefcase icon sits inside the input field on the left */}
