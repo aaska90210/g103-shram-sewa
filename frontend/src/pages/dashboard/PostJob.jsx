@@ -27,11 +27,24 @@ const PostJob = () => {
     });
 
     const [loading, setLoading] = useState(false);
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
 
     // === Handle Input Changes ===
     // Updates the form state when user types in any field
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    // === Handle Category Change ===
+    const handleCategoryChange = (e) => {
+        const value = e.target.value;
+        if (value === 'Other') {
+            setIsCustomCategory(true);
+            setForm({ ...form, category: '' });
+        } else {
+            setIsCustomCategory(false);
+            setForm({ ...form, category: value });
+        }
     };
 
     // === Submit Handler ===
@@ -157,12 +170,12 @@ const PostJob = () => {
                         {/* Category Dropdown with Tag icon */}
                         <div className="form-group">
                             <label className="form-label">Category</label>
-                            <div className="input-wrapper">
-                                <Tag />
+                            <div className="input-wrapper" style={{ marginBottom: isCustomCategory ? '0.5rem' : '0' }}>
+                                <Tag size={20} />
                                 <select
-                                    name="category"
-                                    value={form.category}
-                                    onChange={handleChange}
+                                    name="categorySelect"
+                                    value={isCustomCategory ? 'Other' : form.category}
+                                    onChange={handleCategoryChange}
                                     required
                                     className="form-select"
                                 >
@@ -174,8 +187,26 @@ const PostJob = () => {
                                     <option value="Mason">Mason</option>
                                     <option value="Cleaner">Home Cleaner</option>
                                     <option value="Makeup">MUA</option>
+                                    <option value="Other">Other (Add Custom)</option>
                                 </select>
                             </div>
+                            
+                            {/* Custom Category Input (shown when 'Other' is selected) */}
+                            {isCustomCategory && (
+                                <div className="input-wrapper">
+                                    <Tag size={20} style={{ opacity: 0.5 }} />
+                                    <input
+                                        type="text"
+                                        name="category"
+                                        placeholder="Enter custom category"
+                                        value={form.category}
+                                        onChange={handleChange}
+                                        required
+                                        className="form-input"
+                                        autoFocus
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Budget Input with Nepali Rupees icon */}
