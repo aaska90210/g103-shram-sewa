@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Users, Briefcase, UserCheck, Clock } from 'lucide-react';
+import { MdPeople, MdWork, MdVerifiedUser, MdSchedule } from 'react-icons/md';
+import { 
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell 
+} from 'recharts';
 import '../../styles/Dashboard.css';
 
 const AdminDashboard = () => {
@@ -28,6 +32,19 @@ const AdminDashboard = () => {
         }
     };
 
+    // Data for charts
+    const userRoleData = [
+        { name: 'Clients', value: stats.totalClients },
+        { name: 'Freelancers', value: stats.totalFreelancers },
+    ];
+
+    const jobStatusData = [
+        { name: 'Total Jobs', count: stats.totalJobs },
+        { name: 'Pending Verifications', count: stats.pendingVerifications },
+    ];
+
+    const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+
     return (
         <div className="dashboard-container">
             <div className="page-header">
@@ -40,10 +57,10 @@ const AdminDashboard = () => {
                     <div className="stat-card-content">
                         <div className="stat-card-info">
                             <h3>{stats.totalUsers}</h3>
-                            <p>Total Users</p>
+                            <p className="text-gray-500 text-sm">Total Users</p>
                         </div>
                         <div className="stat-card-icon stat-icon-blue">
-                            <Users />
+                            <MdPeople size={28} />
                         </div>
                     </div>
                 </div>
@@ -52,10 +69,10 @@ const AdminDashboard = () => {
                     <div className="stat-card-content">
                         <div className="stat-card-info">
                             <h3>{stats.pendingVerifications}</h3>
-                            <p>Pending Verifications</p>
+                            <p className="text-gray-500 text-sm">Pending Verifications</p>
                         </div>
                         <div className="stat-card-icon stat-icon-red">
-                            <Clock />
+                            <MdSchedule size={28} />
                         </div>
                     </div>
                 </div>
@@ -64,10 +81,10 @@ const AdminDashboard = () => {
                     <div className="stat-card-content">
                         <div className="stat-card-info">
                             <h3>{stats.totalFreelancers}</h3>
-                            <p>Freelancers</p>
+                            <p className="text-gray-500 text-sm">Freelancers</p>
                         </div>
                         <div className="stat-card-icon stat-icon-green">
-                            <UserCheck />
+                            <MdVerifiedUser size={28} />
                         </div>
                     </div>
                 </div>
@@ -76,11 +93,64 @@ const AdminDashboard = () => {
                     <div className="stat-card-content">
                         <div className="stat-card-info">
                             <h3>{stats.totalJobs}</h3>
-                            <p>Total Jobs Posted</p>
+                            <p className="text-gray-500 text-sm">Total Jobs Posted</p>
                         </div>
                         <div className="stat-card-icon stat-icon-purple">
-                            <Briefcase />
+                            <MdWork size={28} />
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="charts-grid">
+                <div className="chart-card">
+                    <h2>User Distribution</h2>
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                            <PieChart>
+                                <Pie
+                                    data={userRoleData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {userRoleData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="chart-card">
+                    <h2>System Overview</h2>
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                            <BarChart
+                                data={jobStatusData}
+                                margin={{
+                                    top: 5,
+                                    right: 30,
+                                    left: 20,
+                                    bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="count" fill="#A41F39" barSize={50} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>
