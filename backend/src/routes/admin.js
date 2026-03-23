@@ -30,15 +30,42 @@ router.get("/stats", adminMiddleware, async (req, res) => {
 router.get("/users", adminMiddleware, async (req, res) => {
     try {
         const { role, verificationStatus } = req.query;
-        const query = { role: { $ne: "Admin" } }; // Exclude admin from list
+        // Start with an empty query object to include all users by default
+        const query = {}; 
         
+        // Apply filters if provided
         if (role) query.role = role;
         if (verificationStatus) query.verificationStatus = verificationStatus;
 
-        const users = await User.find(query).select("-password").sort({ _id: -1 });
+        console.log("Admin requesting users with query:", query);
+        
+        // Fetch users from DB and convert to plain objects
+        let users = await User.find(query).select("-password").sort({ _id: -1 }).lean();
+        
+        console.log(`Found ${users.length} users in DB.`);
+        
+        // Add hardcoded admin user to the list if not filtered out
+        // This ensures the admin sees themselves in the list even if not in DB
+        const includeAdmin = (!role || role === 'Admin') && (!verificationStatus || verificationStatus === 'Verified');
+        
+        if (includeAdmin) {
+             const adminUser = {
+                 _id: "admin-system-account",
+                 fullName: "Administrator (System)",
+                 email: process.env.ADMIN_EMAIL || "admin@system.com",
+                 role: "Admin",
+                 isVerified: true,
+                 verificationStatus: "Verified",
+                 phone: "N/A",
+                 createdAt: new Date().toISOString()
+             };
+             // Add to beginning of list
+             users.unshift(adminUser);
+        }
+        
         res.json(users);
     } catch (error) {
-        console.error(error);
+        console.error("Error fetching users:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
