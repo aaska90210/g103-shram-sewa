@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { MdCheckCircle, MdCancel } from 'react-icons/md';
 
 const VerifyClients = () => {
     const [clients, setClients] = useState([]);
@@ -89,18 +89,18 @@ const VerifyClients = () => {
                                         </td>
                                         <td className="flex gap-2">
                                             <button 
-                                                className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                                                className="approve-action-btn"
                                                 onClick={() => verifyUser(client._id)}
                                                 title="Approve"
                                             >
-                                                <CheckCircle size={16} /> Approve
+                                                <MdCheckCircle style={{fontSize: '18px'}} /> Approve
                                             </button>
                                             <button 
-                                                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                                                className="reject-action-btn"
                                                 onClick={() => rejectUser(client._id)}
                                                 title="Reject"
                                             >
-                                                <XCircle size={16} /> Reject
+                                                <MdCancel style={{fontSize: '18px'}} /> Reject
                                             </button>
                                         </td>
                                     </tr>
