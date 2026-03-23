@@ -11,7 +11,18 @@ const authMiddleware = async (req, res, next) => {
         }
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret_key");
+
+        // Handle Admin System User (hardcoded)
+        if (decoded.id === "admin") {
+            req.user = { 
+                id: "admin", 
+                role: "Admin", 
+                fullName: "Administrator", 
+                email: process.env.ADMIN_EMAIL || "admin@system.com" 
+            };
+            return next();
+        }
 
         // Get user from token
         const user = await User.findById(decoded.id).select('-password');
