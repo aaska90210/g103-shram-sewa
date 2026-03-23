@@ -1,36 +1,46 @@
 import { Briefcase, Clock, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const ActiveTasks = () => {
     // === Active Tasks Data ===
     // Jobs that the worker is currently working on
-    const [tasks] = useState([
-        {
-            id: 1,
-            jobTitle: 'Electrical Wiring - 2BHK',
-            client: 'Anita Sharma',
-            location: 'Lalitpur',
-            rate: 8000,
-            startDate: '2026-03-06',
-            deadline: '2026-03-10',
-            progress: 60, // percentage
-            status: 'In Progress'
-        },
-        {
-            id: 2,
-            jobTitle: 'Carpenter for Wardrobe',
-            client: 'Maya Thapa',
-            location: 'Pokhara',
-            rate: 5500,
-            startDate: '2026-03-04',
-            deadline: '2026-03-09',
-            progress: 80,
-            status: 'In Progress'
-        },
-    ]);
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // === Fetch Active Tasks ===
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await axios.get('http://localhost:5000/api/jobs/my-applications', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Filter only Approved applications which represent active tasks
+                // You might also want to check if jobStatus is 'Active'
+                const activeTasks = response.data.filter(
+                    app => app.status === 'Approved' && app.jobStatus !== 'Completed'
+                );
+
+                setTasks(activeTasks);
+            } catch (error) {
+                console.error('Error fetching active tasks:', error);
+                toast.error('Failed to load active tasks');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTasks();
+    }, []);
 
     // === Format Date ===
     const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { 
             month: 'short', 
@@ -51,6 +61,10 @@ const ActiveTasks = () => {
             alert('Task marked as complete! (API integration pending)');
         }
     };
+
+    if (loading) {
+        return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading active tasks...</div>;
+    }
 
     return (
         <div>
@@ -77,7 +91,7 @@ const ActiveTasks = () => {
                     <div className="stat-card-content">
                         <div className="stat-card-info">
                             <p>Total Earnings (Active)</p>
-                            <h3>{formatBudget(tasks.reduce((sum, t) => sum + t.rate, 0))}</h3>
+                            <h3>{formatBudget(tasks.reduce((sum, t) => sum + (t.budget || 0), 0))}</h3>
                         </div>
                         <div className="stat-card-icon stat-icon-purple">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -99,7 +113,7 @@ const ActiveTasks = () => {
             ) : (
                 <div className="workers-grid">
                     {tasks.map((task) => (
-                        <div key={task.id} className="worker-card">
+                        <div key={task._id} className="worker-card">
                             {/* Task Header */}
                             <div className="worker-header">
                                 <div style={{ flex: 1 }}>
@@ -111,7 +125,7 @@ const ActiveTasks = () => {
                                     </p>
                                 </div>
                                 <span className="badge badge-blue">
-                                    {task.status}
+                                    {task.status === 'Approved' ? 'In Progress' : task.status}
                                 </span>
                             </div>
 
@@ -122,54 +136,22 @@ const ActiveTasks = () => {
                                         <Clock size={14} style={{ display: 'inline', marginRight: '0.25rem' }} />
                                         Started
                                     </span>
-                                    <span className="worker-stat-value">{formatDate(task.startDate)}</span>
+                                    <span className="worker-stat-value">{formatDate(task.appliedAt)}</span>
                                 </div>
-                                <div className="worker-stat-row">
-                                    <span className="worker-stat-label">
-                                        <Clock size={14} style={{ display: 'inline', marginRight: '0.25rem' }} />
-                                        Deadline
-                                    </span>
-                                    <span className="worker-stat-value">{formatDate(task.deadline)}</span>
-                                </div>
+                                {/* Deadline removed as it's not in backend yet */}
                                 <div className="worker-stat-row">
                                     <span className="worker-stat-label">Payment</span>
                                     <span className="worker-stat-value" style={{ color: '#A41F39', fontWeight: '600' }}>
-                                        {formatBudget(task.rate)}
+                                        {formatBudget(task.budget)}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Progress Bar */}
-                            <div style={{ marginTop: '1rem' }}>
-                                <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    marginBottom: '0.5rem',
-                                    fontSize: '0.875rem',
-                                    color: '#6B7280'
-                                }}>
-                                    <span>Progress</span>
-                                    <span style={{ fontWeight: '600', color: '#111827' }}>{task.progress}%</span>
-                                </div>
-                                <div style={{ 
-                                    width: '100%', 
-                                    height: '8px', 
-                                    backgroundColor: '#E5E7EB', 
-                                    borderRadius: '4px',
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{ 
-                                        width: `${task.progress}%`, 
-                                        height: '100%', 
-                                        backgroundColor: '#A41F39',
-                                        transition: 'width 0.3s ease'
-                                    }}></div>
-                                </div>
-                            </div>
-
+                            {/* Progress Bar - Removed as backend doesn't support it yet */}
+                            
                             {/* Complete Button */}
                             <button
-                                onClick={() => handleComplete(task.id)}
+                                onClick={() => handleComplete(task._id)}
                                 className="worker-action"
                                 style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                             >
