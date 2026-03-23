@@ -138,7 +138,7 @@ router.get('/:id', async (req, res) => {
     try {
         const job = await Job.findById(req.params.id)
             .populate('postedBy', 'fullName email')
-            .populate('applicants.userId', 'fullName email');
+            .populate('applicants.userId', 'fullName email verificationStatus isVerified phone address category bio hourlyRate rating completedJobs');
 
         if (!job) {
             return res.status(404).json({ message: 'Job not found' });
@@ -150,6 +150,15 @@ router.get('/:id', async (req, res) => {
             _id: app.userId._id,
             name: app.userId.fullName,
             email: app.userId.email,
+            verificationStatus: app.userId.verificationStatus,
+            isVerified: app.userId.isVerified,
+            phone: app.userId.phone,
+            address: app.userId.address,
+            category: app.userId.category,
+            bio: app.userId.bio,
+            hourlyRate: app.userId.hourlyRate,
+            rating: app.userId.rating,
+            completedJobs: app.userId.completedJobs,
             status: app.status,
             appliedAt: app.appliedAt
         }));

@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useEffect } from 'react';
+import axios from 'axios';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import HirerLayout from './layouts/HirerLayout';
@@ -8,6 +10,7 @@ import PostJob from './pages/dashboard/PostJob';
 import ManageJobs from './pages/dashboard/ManageJobs';
 import MyWorkers from './pages/dashboard/MyWorkers';
 import PaymentHistory from './pages/dashboard/PaymentHistory';
+import ClientProfile from './pages/dashboard/ClientProfile';
 import FreelancerLayout from './layouts/FreelancerLayout';
 import FreelancerDashboard from './pages/freelancerDashboard/FreelancerDashboard';
 import FindWork from './pages/freelancerDashboard/FindWork';
@@ -25,10 +28,32 @@ import AllUsers from './pages/admin/AllUsers';
 import './App.css';
 
 function App() {
+  // === Global Axios Interceptor ===
+  // Automatically logs out user if token is invalid (401)
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          // Clear local storage and redirect to login
+          localStorage.clear();
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
   return (
     <Router>
       <Toaster position="top-right" />
-
       <Routes>
         {/* redirect to register */}
         <Route path="/" element={<Navigate to="/register" replace />} />
@@ -52,6 +77,7 @@ function App() {
           <Route path="manage-jobs" element={<ManageJobs />} />
           <Route path="workers" element={<MyWorkers />} />
           <Route path="payments" element={<PaymentHistory />} />
+          <Route path="profile" element={<ClientProfile />} />
         </Route>
 
         {/* freelancer/worker routes with sidebar layout */}

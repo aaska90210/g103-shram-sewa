@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Search, FileText, Briefcase, Wallet, User, ShieldCheck, Clock } from 'lucide-react';
 
@@ -14,20 +15,31 @@ const navItems = [
 
 const FreelancerSidebar = () => {
     // Get user data from localStorage (set during login/registration)
-    const getUserData = () => {
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            return {
-                name: user.name || 'Worker',
-                initial: (user.name || 'W')[0].toUpperCase(),
-                verificationStatus: user.verificationStatus || 'Pending'
-            };
-        } catch {
-            return { name: 'Worker', initial: 'W', verificationStatus: 'Pending' };
-        }
-    };
+    const [userData, setUserData] = useState({ name: 'Worker', initial: 'W', verificationStatus: 'Pending' });
 
-    const { name, initial, verificationStatus } = getUserData();
+    useEffect(() => {
+        const updateUserData = () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                setUserData({
+                    name: user.name || 'Worker',
+                    initial: (user.name || 'W')[0].toUpperCase(),
+                    verificationStatus: user.verificationStatus || 'Pending'
+                });
+            } catch {
+                setUserData({ name: 'Worker', initial: 'W', verificationStatus: 'Pending' });
+            }
+        };
+
+        // Initial load
+        updateUserData();
+
+        // Listen for storage changes
+        window.addEventListener('storage', updateUserData);
+        return () => window.removeEventListener('storage', updateUserData);
+    }, []);
+
+    const { name, initial, verificationStatus } = userData;
     const isVerified = verificationStatus === 'Verified';
 
     return (

@@ -84,9 +84,21 @@ router.put("/users/:id/password", adminMiddleware, async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Store original verification status to ensure it doesn't change
+        const originalStatus = user.verificationStatus;
+        const originalIsVerified = user.isVerified;
+
         const bcrypt = (await import("bcryptjs")).default;
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
+        
+        // Increment token version to invalidate existing sessions (force logout)
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        
+        // Explicitly restore verification status (redundant but safe)
+        user.verificationStatus = originalStatus;
+        user.isVerified = originalIsVerified;
+
         await user.save();
 
         res.json({ message: "Password updated successfully" });

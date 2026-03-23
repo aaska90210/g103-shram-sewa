@@ -22,22 +22,41 @@ const Register = () => {
         skill: '', // Only for Freelancer
     });
 
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleCategoryChange = (e) => {
+        const value = e.target.value;
+        if (value === 'Other') {
+            setIsCustomCategory(true);
+            setFormData({ ...formData, skill: '' });
+        } else {
+            setIsCustomCategory(false);
+            setFormData({ ...formData, skill: value });
+        }
     };
 
     // submit handler
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // prepare payload (backend expects fullName, email, password, role)
+        // Phone Number Validation
+        if (!/^9\d{9}$/.test(formData.phone)) {
+            toast.error('Phone number must be 10 digits and start with 9');
+            return;
+        }
+
+        // prepare payload
         const payload = {
             fullName: formData.fullName,
             email: formData.email,
             password: formData.password,
-            role: role,
-            // phone: formData.phone, // Sending just in case backend is updated later
-            // skill: role === 'Freelancer' ? formData.skill : undefined
+            role,
+            phone: formData.phone,
+            category: role === 'Freelancer' ? formData.skill : undefined
         };
 
         try {
@@ -46,7 +65,6 @@ const Register = () => {
 
             toast.success('Registration Successful!');
             navigate('/login');
-
         } catch (err) {
             console.error(err);
             const message = err.response?.data?.message || 'Registration failed.';
@@ -110,7 +128,8 @@ const Register = () => {
                     <input
                         type="tel"
                         name="phone"
-                        placeholder="Phone Number"
+                        placeholder="Phone Number (e.g. 9XXXXXXXXX)"
+                        maxLength={10}
                         value={formData.phone}
                         onChange={handleChange}
                         required
@@ -132,25 +151,44 @@ const Register = () => {
 
                 {/* skill (freelancer only) */}
                 {role === 'Freelancer' && (
-                    <div className="input-box">
-                        <span className="icon"><FaBriefcase /></span>
-                        <select
-                            name="skill"
-                            value={formData.skill}
-                            onChange={handleChange}
-                            className="styled-select"
-                            required
-                        >
-                            <option value="" disabled>Select Primary Skill</option>
-                            <option value="Electrician">Electrician</option>
-                            <option value="Plumber">Plumber</option>
-                            <option value="Painter">Painter</option>
-                            <option value="Carpenter">Carpenter</option>
-                            <option value="Mason">Mason</option>
-                            <option value="Cleaner">Home Cleaner</option>
-                            <option value="Makeup">MUA</option>
-                        </select>
-                    </div>
+                    <>
+                        <div className="input-box">
+                            <span className="icon"><FaBriefcase /></span>
+                            <select
+                                name="skill"
+                                value={isCustomCategory ? 'Other' : formData.skill}
+                                onChange={handleCategoryChange}
+                                className="styled-select"
+                                required
+                            >
+                                <option value="" disabled>Select Primary Skill</option>
+                                <option value="Electrician">Electrician</option>
+                                <option value="Plumber">Plumber</option>
+                                <option value="Painter">Painter</option>
+                                <option value="Carpenter">Carpenter</option>
+                                <option value="Mason">Mason</option>
+                                <option value="Cleaner">Home Cleaner</option>
+                                <option value="Makeup">MUA</option>
+                                <option value="Other">Other (Add Custom)</option>
+                            </select>
+                        </div>
+                        
+                        {/* Custom Category Input */}
+                        {isCustomCategory && (
+                            <div className="input-box">
+                                <span className="icon"><FaBriefcase style={{ opacity: 0.5 }} /></span>
+                                <input
+                                    type="text"
+                                    name="skill"
+                                    placeholder="Enter custom category"
+                                    value={formData.skill}
+                                    onChange={handleChange}
+                                    required
+                                    autoFocus
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* password */}

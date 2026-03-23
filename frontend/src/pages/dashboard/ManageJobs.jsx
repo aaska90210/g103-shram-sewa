@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2, Filter } from 'lucide-react';
+import { Eye, Edit, Trash2, Filter, User, Check, X, ShieldCheck, Phone, MapPin, Briefcase, DollarSign, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ const ManageJobs = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedJob, setSelectedJob] = useState(null);
+    const [selectedApplicant, setSelectedApplicant] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showApplicantsModal, setShowApplicantsModal] = useState(false);
     const [editForm, setEditForm] = useState({
@@ -122,7 +123,14 @@ const ManageJobs = () => {
                 }
             );
 
-      
+            toast.success('Job updated successfully');
+            setShowEditModal(false);
+            fetchJobs(); // Refresh the list
+        } catch (err) {
+            console.error('Error updating job:', err);
+            toast.error(err.response?.data?.message || 'Failed to update job');
+        }
+    };
 
     // Approve applicant
     const handleApprove = async (applicantId) => {
@@ -170,13 +178,16 @@ const ManageJobs = () => {
             console.error('Error rejecting applicant:', err);
             toast.error(err.response?.data?.message || 'Failed to reject applicant');
         }
-    };      toast.success('Job updated successfully');
-            setShowEditModal(false);
-            fetchJobs(); // Refresh the list
-        } catch (err) {
-            console.error('Error updating job:', err);
-            toast.error(err.response?.data?.message || 'Failed to update job');
-        }
+    };
+
+    // View applicant profile
+    const handleViewProfile = (applicant) => {
+        setSelectedApplicant(applicant);
+    };
+
+    // Close profile modal
+    const closeProfileModal = () => {
+        setSelectedApplicant(null);
     };
 
     // Delete job handler
@@ -428,6 +439,16 @@ const ManageJobs = () => {
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button
+                                                    onClick={() => handleViewProfile(applicant)}
+                                                    className="btn btn-secondary"
+                                                    style={{ 
+                                                        padding: '0.5rem 1rem',
+                                                        fontSize: '0.875rem'
+                                                    }}
+                                                >
+                                                    <User size={16} />
+                                                </button>
+                                                <button
                                                     onClick={() => handleApprove(applicant._id)}
                                                     className="btn btn-primary"
                                                     style={{ 
@@ -592,6 +613,234 @@ const ManageJobs = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Applicant Profile Modal - Cute Design */}
+            {selectedApplicant && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1100
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '1.5rem',
+                        padding: '0',
+                        maxWidth: '480px',
+                        width: '90%',
+                        maxHeight: '90vh',
+                        overflowY: 'auto',
+                        position: 'relative',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }}>
+                        {/* Decorative Header */}
+                        <div style={{ 
+                            height: '100px', 
+                            background: 'linear-gradient(135deg, #A41F39 0%, #FF8FA3 100%)',
+                            borderRadius: '1.5rem 1.5rem 0 0'
+                        }}></div>
+
+                        <button 
+                            onClick={closeProfileModal}
+                            style={{
+                                position: 'absolute',
+                                top: '1rem',
+                                right: '1rem',
+                                background: 'rgba(255,255,255,0.3)',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer',
+                                color: 'white',
+                                backdropFilter: 'blur(4px)'
+                            }}
+                        >
+                            ×
+                        </button>
+
+                        <div style={{ padding: '0 2rem 2rem', marginTop: '-50px', position: 'relative' }}>
+                            {/* Avatar */}
+                            <div style={{ 
+                                width: '100px', 
+                                height: '100px', 
+                                borderRadius: '50%', 
+                                backgroundColor: 'white', 
+                                padding: '4px',
+                                margin: '0 auto 1rem',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}>
+                                <div style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: '50%',
+                                    backgroundColor: '#F3F4F6',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <User size={48} color="#9CA3AF" />
+                                </div>
+                            </div>
+                            
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                <h2 style={{ margin: 0, color: '#111827', fontSize: '1.5rem', fontWeight: 'bold' }}>{selectedApplicant.name}</h2>
+                                <p style={{ margin: '0.25rem 0 0.75rem', color: '#6B7280' }}>{selectedApplicant.email}</p>
+                                
+                                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    {selectedApplicant.category && (
+                                        <span className="badge badge-blue">
+                                            {selectedApplicant.category}
+                                        </span>
+                                    )}
+                                    {selectedApplicant.verificationStatus === 'Verified' ? (
+                                        <span className="badge badge-green" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <ShieldCheck size={14} /> Verified Profile
+                                        </span>
+                                    ) : (
+                                        <span className="badge badge-yellow" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            Not Verified
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(2, 1fr)', 
+                                gap: '1rem', 
+                                marginBottom: '1.5rem' 
+                            }}>
+                                <div style={{ backgroundColor: '#F9FAFB', padding: '1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ backgroundColor: '#DBEAFE', padding: '8px', borderRadius: '50%', color: '#2563EB' }}>
+                                        <Phone size={18} />
+                                    </div>
+                                    <div style={{ overflow: 'hidden' }}>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B7280' }}>Phone</p>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1F2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {selectedApplicant.phone || 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ backgroundColor: '#F9FAFB', padding: '1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ backgroundColor: '#DCFCE7', padding: '8px', borderRadius: '50%', color: '#16A34A' }}>
+                                        <DollarSign size={18} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B7280' }}>Hourly Rate</p>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1F2937' }}>
+                                            {selectedApplicant.hourlyRate ? `Rs. ${selectedApplicant.hourlyRate}` : 'Negotiable'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ backgroundColor: '#F9FAFB', padding: '1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ backgroundColor: '#FEE2E2', padding: '8px', borderRadius: '50%', color: '#DC2626' }}>
+                                        <MapPin size={18} />
+                                    </div>
+                                    <div style={{ overflow: 'hidden' }}>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B7280' }}>Location</p>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1F2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {selectedApplicant.address || 'Not specified'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ backgroundColor: '#F9FAFB', padding: '1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ backgroundColor: '#FEF3C7', padding: '8px', borderRadius: '50%', color: '#D97706' }}>
+                                        <Star size={18} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6B7280' }}>Rating</p>
+                                        <p style={{ margin: 0, fontWeight: '600', color: '#1F2937' }}>
+                                            {selectedApplicant.rating ? `${selectedApplicant.rating} / 5` : 'New'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bio Section */}
+                            <div style={{ 
+                                backgroundColor: '#FFF5F7', 
+                                padding: '1.25rem', 
+                                borderRadius: '1rem', 
+                                marginBottom: '1.5rem',
+                                border: '1px dashed #FDA4AF'
+                            }}>
+                                <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#BE123C', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Briefcase size={14} /> About {selectedApplicant.name.split(' ')[0]}
+                                </h3>
+                                <p style={{ margin: 0, fontSize: '0.875rem', color: '#4B5563', lineHeight: '1.6', fontStyle: selectedApplicant.bio ? 'normal' : 'italic' }}>
+                                    {selectedApplicant.bio || "No bio information provided by this freelancer yet."}
+                                </p>
+                            </div>
+
+                            {/* Applied Date */}
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem', color: '#9CA3AF' }}>
+                                Applied on {new Date(selectedApplicant.appliedAt).toLocaleDateString()}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button
+                                    onClick={() => {
+                                        handleApprove(selectedApplicant._id);
+                                        closeProfileModal();
+                                    }}
+                                    className="btn"
+                                    style={{ 
+                                        flex: 1, 
+                                        backgroundColor: '#059669', 
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '0.75rem',
+                                        borderRadius: '0.75rem',
+                                        fontWeight: '600',
+                                        opacity: selectedApplicant.status === 'Approved' ? 0.7 : 1,
+                                        cursor: selectedApplicant.status === 'Approved' ? 'default' : 'pointer'
+                                    }}
+                                    disabled={selectedApplicant.status === 'Approved'}
+                                >
+                                    {selectedApplicant.status === 'Approved' ? 'Approved' : 'Approve'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handleReject(selectedApplicant._id);
+                                        closeProfileModal();
+                                    }}
+                                    className="btn"
+                                    style={{ 
+                                        flex: 1, 
+                                        backgroundColor: '#EF4444', 
+                                        color: 'white', 
+                                        border: 'none',
+                                        padding: '0.75rem',
+                                        borderRadius: '0.75rem',
+                                        fontWeight: '600',
+                                        opacity: selectedApplicant.status === 'Rejected' ? 0.7 : 1,
+                                        cursor: selectedApplicant.status === 'Rejected' ? 'default' : 'pointer'
+                                    }}
+                                    disabled={selectedApplicant.status === 'Rejected'}
+                                >
+                                    {selectedApplicant.status === 'Rejected' ? 'Rejected' : 'Reject'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

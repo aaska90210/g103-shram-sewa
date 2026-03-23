@@ -1,30 +1,16 @@
-import { User, Star, Briefcase, MapPin, Phone, Mail, Edit } from 'lucide-react';
+import { User, Mail, MapPin, Phone, Edit, Building } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
-const CATEGORIES = [
-    "Electrician",
-    "Plumber",
-    "Painter",
-    "Carpenter",
-    "Mason",
-    "Home Cleaner",
-    "MUA"
-];
-
-const FreelancerProfile = () => {
+const ClientProfile = () => {
     // === Profile State ===
     const [profile, setProfile] = useState({
         fullName: '',
         email: '',
         phone: '',
         address: '',
-        category: '',
         bio: '',
-        hourlyRate: 0,
-        rating: 0,
-        completedJobs: 0,
         verified: false,
         verificationStatus: 'Pending'
     });
@@ -32,10 +18,8 @@ const FreelancerProfile = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ ...profile });
-    const [isCustomCategory, setIsCustomCategory] = useState(false);
 
     // Fetch user profile on mount
-
     useEffect(() => {
         fetchProfile();
     }, []);
@@ -53,11 +37,7 @@ const FreelancerProfile = () => {
                 email: user.email || '',
                 phone: user.phone || '',
                 address: user.address || '',
-                category: user.category || 'Electrician', 
                 bio: user.bio || '',
-                hourlyRate: user.hourlyRate || 0,
-                rating: user.rating || 0,
-                completedJobs: user.completedJobs || 0,
                 verified: user.isVerified || false,
                 verificationStatus: user.verificationStatus || 'Pending'
             };
@@ -69,17 +49,11 @@ const FreelancerProfile = () => {
                 name: user.fullName || storedUser.name,
                 verificationStatus: user.verificationStatus || storedUser.verificationStatus
             }));
+            // Trigger event for other components to update if watching
             window.dispatchEvent(new Event('storage'));
 
             setProfile(profileData);
             setEditForm(profileData);
-            
-            // Check if user has a custom category
-            if (profileData.category && !CATEGORIES.includes(profileData.category)) {
-                setIsCustomCategory(true);
-            } else {
-                setIsCustomCategory(false);
-            }
         } catch (error) {
             console.error('Error fetching profile:', error);
             toast.error('Failed to load profile');
@@ -91,38 +65,13 @@ const FreelancerProfile = () => {
     // === Handle Edit Mode ===
     const handleEdit = () => {
         setEditForm({ ...profile });
-        // Check if category is custom in profile state
-        if (profile.category && !CATEGORIES.includes(profile.category)) {
-            setIsCustomCategory(true);
-        } else {
-            setIsCustomCategory(false);
-        }
         setIsEditing(true);
     };
 
     // === Handle Cancel ===
     const handleCancel = () => {
         setEditForm({ ...profile });
-        
-        // Reset custom category flag based on original profile
-        if (profile.category && !CATEGORIES.includes(profile.category)) {
-            setIsCustomCategory(true);
-        } else {
-            setIsCustomCategory(false);
-        }
         setIsEditing(false);
-    };
-
-    // === Handle Category Select Change ===
-    const handleCategorySelect = (e) => {
-        const value = e.target.value;
-        if (value === 'Other') {
-            setIsCustomCategory(true);
-            setEditForm({ ...editForm, category: '' });
-        } else {
-            setIsCustomCategory(false);
-            setEditForm({ ...editForm, category: value });
-        }
     };
 
     // === Handle Input Change ===
@@ -135,8 +84,6 @@ const FreelancerProfile = () => {
         e.preventDefault();
         
         try {
-            const saveCategory = isCustomCategory ? editForm.category : editForm.category;
-
             const token = localStorage.getItem('token');
             const response = await axios.put(
                 'http://localhost:5000/api/auth/profile',
@@ -144,9 +91,7 @@ const FreelancerProfile = () => {
                     fullName: editForm.fullName,
                     phone: editForm.phone,
                     address: editForm.address,
-                    category: saveCategory,
-                    bio: editForm.bio,
-                    hourlyRate: editForm.hourlyRate
+                    bio: editForm.bio
                 },
                 {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -154,15 +99,12 @@ const FreelancerProfile = () => {
             );
 
             const updatedUser = response.data;
-            // Merge updated fields into current profile state
             const newProfileState = {
                 ...profile,
                 fullName: updatedUser.fullName,
                 phone: updatedUser.phone,
                 address: updatedUser.address || '',
-                category: updatedUser.category,
-                bio: updatedUser.bio,
-                hourlyRate: updatedUser.hourlyRate
+                bio: updatedUser.bio
             };
 
             setProfile(newProfileState);
@@ -184,7 +126,7 @@ const FreelancerProfile = () => {
             <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                     <h1>My Profile</h1>
-                    <p>Manage your profile and skills to attract more clients.</p>
+                    <p>Manage your personal information and contact details.</p>
                 </div>
                 {!isEditing && (
                     <button onClick={handleEdit} className="btn btn-primary">
@@ -199,34 +141,18 @@ const FreelancerProfile = () => {
                 <div className="stat-card">
                     <div className="stat-card-content">
                         <div className="stat-card-info">
-                            <p>Profile Rating</p>
-                            <h3>{profile.rating} <Star size={20} style={{ display: 'inline', fill: '#FBBF24', color: '#FBBF24' }} /></h3>
+                            <p>Account Type</p>
+                            <h3><Building size={20} style={{ display: 'inline', color: '#6366F1', marginRight: '8px' }} /> Client</h3>
                         </div>
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-card-content">
                         <div className="stat-card-info">
-                            <p>Jobs Completed</p>
-                            <h3>{profile.completedJobs}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-content">
-                        <div className="stat-card-info">
-                            <p>Hourly Rate</p>
-                            <h3>Rs. {profile.hourlyRate}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-card-content">
-                        <div className="stat-card-info">
-                            <p>Verification</p>
+                            <p>Verification Status</p>
                             <h3>
                                 <span className={`badge ${profile.verified ? 'badge-green' : 'badge-yellow'}`}>
-                                    {profile.verified ? 'Verified' : 'Pending'}
+                                    {profile.verificationStatus}
                                 </span>
                             </h3>
                         </div>
@@ -286,104 +212,34 @@ const FreelancerProfile = () => {
                         </div>
                     </div>
 
-                    {/* Category and Location Row */}
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label className="form-label">
-                                <Briefcase size={16} />
-                                Category
-                            </label>
-                            
-                            {isEditing ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <select
-                                        value={isCustomCategory ? 'Other' : editForm.category}
-                                        onChange={handleCategorySelect}
-                                        className="form-select"
-                                    >
-                                        <option value="" disabled>Select category</option>
-                                        {CATEGORIES.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                        <option value="Other">Other (Add Custom)</option>
-                                    </select>
-                                    
-                                    {isCustomCategory && (
-                                        <input
-                                            type="text"
-                                            name="category"
-                                            value={editForm.category}
-                                            onChange={handleChange}
-                                            placeholder="Enter your custom category"
-                                            className="form-input"
-                                            autoFocus
-                                            required
-                                        />
-                                    )}
-                                </div>
-                            ) : (
-                                <select
-                                    name="category"
-                                    value={profile.category}
-                                    disabled={true}
-                                    className="form-select"
-                                >
-                                    <option value="" disabled>No category set</option>
-                                    {isCustomCategory ? (
-                                        <option value={profile.category}>{profile.category}</option>
-                                    ) : (
-                                        CATEGORIES.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))
-                                    )}
-                                    {/* Fallback option if current category not in list */}
-                                    {!CATEGORIES.includes(profile.category) && !isCustomCategory && profile.category && (
-                                        <option value={profile.category}>{profile.category}</option>
-                                    )}
-                                </select>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                <MapPin size={16} />
-                                Address
-                            </label>
-                            <input
-                                type="text"
-                                name="address"
-                                value={isEditing ? editForm.address : profile.address}
-                                onChange={handleChange}
-                                disabled={!isEditing}
-                                className="form-input"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Hourly Rate */}
+                    {/* Address/Location */}
                     <div className="form-group">
-                        <label className="form-label">Hourly Rate (NPR)</label>
+                        <label className="form-label">
+                            <MapPin size={16} />
+                            Address
+                        </label>
                         <input
-                            type="number"
-                            name="hourlyRate"
-                            value={isEditing ? editForm.hourlyRate : profile.hourlyRate}
+                            type="text"
+                            name="address"
+                            value={isEditing ? editForm.address : profile.address}
                             onChange={handleChange}
                             disabled={!isEditing}
                             className="form-input"
-                            min="0"
+                            placeholder="e.g. Kathmandu, Nepal"
                         />
                     </div>
 
-                    {/* Bio */}
+                    {/* Bio / Company Description */}
                     <div className="form-group">
-                        <label className="form-label">Bio</label>
+                        <label className="form-label">Bio / Company Description</label>
                         <textarea
                             name="bio"
                             value={isEditing ? editForm.bio : profile.bio}
                             onChange={handleChange}
                             disabled={!isEditing}
                             className="form-textarea"
-                            placeholder="Tell clients about your skills and experience..."
+                            placeholder="Tell freelancers about yourself or your company..."
+                            rows={4}
                         />
                     </div>
 
@@ -404,4 +260,4 @@ const FreelancerProfile = () => {
     );
 };
 
-export default FreelancerProfile;
+export default ClientProfile;

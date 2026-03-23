@@ -1,4 +1,4 @@
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -7,6 +7,7 @@ const MyApplications = () => {
     // === State Management ===
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedApplication, setSelectedApplication] = useState(null);
 
     // === Fetch Applications on Mount ===
     useEffect(() => {
@@ -60,21 +61,77 @@ const MyApplications = () => {
 
     // === View Application Details ===
     const handleView = (application) => {
-        const details = `
-Job: ${application.jobTitle}
-Client: ${application.client}
-Location: ${application.location}
-Budget: ${formatBudget(application.budget)}
-Applied: ${formatDate(application.appliedAt)}
-Status: ${application.status}
-Job Status: ${application.jobStatus}
-        `.trim();
-        
-        toast.info(details);
+        setSelectedApplication(application);
     };
 
     return (
         <div>
+            {/* === View Application Modal === */}
+            {selectedApplication && (
+                <div className="dashboard-modal-overlay">
+                    <div className="dashboard-modal-content" style={{ maxWidth: '500px' }}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Application Details</h3>
+                            <button 
+                                onClick={() => setSelectedApplication(null)}
+                                className="modal-close"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        <div className="modal-body">
+                             <div className="modal-form-group">
+                                <label className="modal-label">Job Title</label>
+                                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#111827', margin: 0 }}>
+                                    {selectedApplication.jobTitle}
+                                </p>
+                             </div>
+
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                                 <div className="modal-form-group">
+                                    <label className="modal-label">Client</label>
+                                    <p style={{ margin: 0 }}>{selectedApplication.client}</p>
+                                 </div>
+                                 <div className="modal-form-group">
+                                    <label className="modal-label">Location</label>
+                                    <p style={{ margin: 0 }}>{selectedApplication.location}</p>
+                                 </div>
+                                 <div className="modal-form-group">
+                                    <label className="modal-label">Budget</label>
+                                    <p style={{ margin: 0, fontWeight: '600', color: '#A41F39' }}>
+                                        {formatBudget(selectedApplication.budget)}
+                                    </p>
+                                 </div>
+                                 <div className="modal-form-group">
+                                    <label className="modal-label">Status</label>
+                                    <span className={`badge ${
+                                        selectedApplication.status === 'Approved' ? 'badge-green' :
+                                        selectedApplication.status === 'Pending' ? 'badge-yellow' : 'badge-red'
+                                    }`}>
+                                        {selectedApplication.status}
+                                    </span>
+                                 </div>
+                             </div>
+
+                             <div className="modal-form-group" style={{ marginTop: '1rem' }}>
+                                <label className="modal-label">Applied Date</label>
+                                <p style={{ margin: 0 }}>{formatDate(selectedApplication.appliedAt)}</p>
+                             </div>
+
+                             <div className="modal-actions" style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                                <button 
+                                    onClick={() => setSelectedApplication(null)}
+                                    className="modal-btn-cancel"
+                                >
+                                    Close
+                                </button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* === Page Header === */}
             <div className="page-header">
                 <h1>My Applications</h1>
