@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, Briefcase, Wallet, Users, ShieldCheck, Clock } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Briefcase, Wallet, Users, ShieldCheck, Clock, User } from 'lucide-react';
 
 // sidebar navigation links
 const navItems = [
@@ -8,24 +9,36 @@ const navItems = [
     { path: '/hirer/manage-jobs', label: 'Manage Jobs', icon: Briefcase },
     { path: '/hirer/workers', label: 'My Workers', icon: Users },
     { path: '/hirer/payments', label: 'Payments', icon: Wallet },
+    { path: '/hirer/profile', label: 'My Profile', icon: User },
 ];
 
 const HirerSidebar = () => {
     // Get user data from localStorage (set during login/registration)
-    const getUserData = () => {
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            return {
-                name: user.name || 'User',
-                initial: (user.name || 'U')[0].toUpperCase(),
-                verificationStatus: user.verificationStatus || 'Pending'
-            };
-        } catch {
-            return { name: 'User', initial: 'U', verificationStatus: 'Pending' };
-        }
-    };
+    const [userData, setUserData] = useState({ name: 'User', initial: 'U', verificationStatus: 'Pending' });
 
-    const { name, initial, verificationStatus } = getUserData();
+    useEffect(() => {
+        const updateUserData = () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                setUserData({
+                    name: user.name || 'User',
+                    initial: (user.name || 'U')[0].toUpperCase(),
+                    verificationStatus: user.verificationStatus || 'Pending'
+                });
+            } catch {
+                setUserData({ name: 'User', initial: 'U', verificationStatus: 'Pending' });
+            }
+        };
+
+        // Initial load
+        updateUserData();
+
+        // Listen for storage changes (updates from Profile page)
+        window.addEventListener('storage', updateUserData);
+        return () => window.removeEventListener('storage', updateUserData);
+    }, []);
+
+    const { name, initial, verificationStatus } = userData;
     const isVerified = verificationStatus === 'Verified';
 
     return (
