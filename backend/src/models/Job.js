@@ -13,7 +13,7 @@ const jobSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['Electrician', 'Plumber', 'Painter', 'Carpenter', 'Mason', 'Cleaner', 'Makeup']
+        trim: true
     },
     budget: {
         type: Number,
