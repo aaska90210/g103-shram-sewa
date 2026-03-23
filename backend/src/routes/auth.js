@@ -88,7 +88,7 @@ router.post("/login", async (req, res) => {
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
             const token = jwt.sign(
                 { id: "admin", role: "Admin" },
-                process.env.JWT_SECRET,
+                process.env.JWT_SECRET || "fallback_secret_key", // Ensure secret consistency
                 { expiresIn: "4h" }
             );
             return res.json({
