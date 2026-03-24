@@ -6,6 +6,22 @@ import toast from 'react-hot-toast';
 
 import './AuthStyles.css';
 
+const handleRegister = async (e) => {
+  e.preventDefault();
+
+  const loading = toast.loading("Creating account...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.success("Account created successfully ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Registration failed ");
+  }
+};
+
 // Register page (Client / Freelancer)
 const Register = () => {
     const navigate = useNavigate();

@@ -3,6 +3,22 @@ import toast from 'react-hot-toast';
 import { Briefcase, MapPin, FileText, Tag } from 'lucide-react';
 import axios from 'axios';
 
+
+const handleRegister = async (e) => {
+  e.preventDefault();
+
+  const loading = toast.loading("Creating account...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.success("Account created successfully ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Registration failed ");
+  }
+};
 // Custom Nepali Rupees Icon Component
 const NepaliRupeeIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

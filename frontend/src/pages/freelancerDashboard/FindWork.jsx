@@ -3,6 +3,20 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+
+const handleApply = async (jobId) => {
+  const loading = toast.loading("Applying...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.success("Application submitted ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Failed to apply ");
+  }
+};
 const FindWork = () => {
     // === State Management ===
     const [jobs, setJobs] = useState([]);
