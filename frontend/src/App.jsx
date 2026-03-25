@@ -24,9 +24,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import VerifyClients from './pages/admin/VerifyClients';
 import VerifyFreelancers from './pages/admin/VerifyFreelancers';
 import AllUsers from './pages/admin/AllUsers';
+<<<<<<< Updated upstream
 import toast from 'react-hot-toast';
 
 <Toaster position="top-right" />
+=======
+import PaymentSuccess from './pages/payment/paymentSuccess';
+>>>>>>> Stashed changes
 
 import './App.css';
 
@@ -92,6 +96,9 @@ function App() {
           <Route path="earnings" element={<Earnings />} />
           <Route path="profile" element={<FreelancerProfile />} />
         </Route>
+
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+<Route path="/payment-failure" element={<div>Payment Failed. Please try again.</div>} />
       </Routes>
     </Router>
   );
