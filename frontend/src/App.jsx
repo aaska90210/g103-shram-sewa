@@ -18,6 +18,7 @@ import MyApplications from './pages/freelancerDashboard/MyApplications';
 import ActiveTasks from './pages/freelancerDashboard/ActiveTasks';
 import Earnings from './pages/freelancerDashboard/Earnings';
 import FreelancerProfile from './pages/freelancerDashboard/FreelancerProfile';
+import Availability from './pages/freelancerDashboard/Availability';
 // Admin Imports
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -93,6 +94,7 @@ function App() {
           <Route path="find-work" element={<FindWork />} />
           <Route path="applications" element={<MyApplications />} />
           <Route path="active-tasks" element={<ActiveTasks />} />
+          <Route path="availability" element={<Availability />} />
           <Route path="earnings" element={<Earnings />} />
           <Route path="profile" element={<FreelancerProfile />} />
         </Route>

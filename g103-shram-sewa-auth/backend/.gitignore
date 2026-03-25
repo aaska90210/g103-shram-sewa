@@ -1,3 +1,0 @@
-# Ignore the main environment file and all .env.* files
-node_modules/
-.env
