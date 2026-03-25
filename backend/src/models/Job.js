@@ -25,8 +25,8 @@ const jobSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Active', 'Completed', 'Pending', 'Cancelled'],
-        default: 'Active'
+        enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'PAID'],
+        default: 'PENDING'
     },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,

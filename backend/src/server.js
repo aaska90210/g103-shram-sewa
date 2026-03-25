@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import jobRoutes from "./routes/jobs.js";
 import adminRoutes from "./routes/admin.js";
+import paymentRoutes from "./routes/payment.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/admin", adminRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Test API
 app.get("/", (req, res) => {
