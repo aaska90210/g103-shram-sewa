@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
-import toast from "react-hot-toast";
 
 // Start Task
 const startTask = () => {
