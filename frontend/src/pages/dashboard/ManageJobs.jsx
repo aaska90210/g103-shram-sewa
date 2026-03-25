@@ -1,7 +1,8 @@
-import { Eye, Edit, Trash2, Filter, User, Check, X, ShieldCheck, Phone, MapPin, Briefcase, DollarSign, Star } from 'lucide-react';
+import { Eye, Edit, Trash2, Filter, User, Check, X, ShieldCheck, Phone, MapPin, Briefcase, DollarSign, Star, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import EsewaButton from '../../components/EsewaButton';
 
 
 // Accept booking
@@ -51,6 +52,42 @@ const ManageJobs = () => {
         location: '',
         status: ''
     });
+
+    const statusLabelMap = {
+        PENDING: 'Pending',
+        IN_PROGRESS: 'In Progress',
+        COMPLETED: 'Completed',
+        PAID: 'Paid'
+    };
+
+    const getStatusBadgeClass = (status) => {
+        switch (status) {
+            case 'IN_PROGRESS':
+                return 'badge-blue';
+            case 'COMPLETED':
+                return 'badge-blue';
+            case 'PAID':
+                return 'badge-green';
+            default:
+                return 'badge-yellow';
+        }
+    };
+
+    const renderPaymentState = (job) => {
+        if (job.status === 'IN_PROGRESS') {
+            return <span className="badge badge-blue">Work in Progress</span>;
+        }
+
+        if (job.status === 'COMPLETED') {
+            return <EsewaButton amount={job.budget} jobId={job._id} />;
+        }
+
+        if (job.status === 'PAID') {
+            return <span className="badge badge-green">Payment Released</span>;
+        }
+
+        return <span className="badge badge-yellow">Pending Start</span>;
+    };
 
     // Fetch jobs from backend on component mount
     useEffect(() => {
@@ -288,6 +325,7 @@ const ManageJobs = () => {
                                     <th>Location</th>
                                     <th>Budget</th>
                                     <th>Status</th>
+                                    <th>Payment</th>
                                     <th>Applicants</th>
                                     <th>Actions</th>
                                 </tr>
@@ -300,16 +338,11 @@ const ManageJobs = () => {
                                         <td>{job.location}</td>
                                         <td className="table-cell-bold">{formatBudget(job.budget)}</td>
                                         <td>
-                                            <span className={`badge ${
-                                                job.status === 'Active' 
-                                                    ? 'badge-green' 
-                                                    : job.status === 'Completed'
-                                                    ? 'badge-blue'
-                                                    : 'badge-yellow'
-                                            }`}>
-                                                {job.status}
+                                            <span className={`badge ${getStatusBadgeClass(job.status)}`}>
+                                                {statusLabelMap[job.status] || job.status}
                                             </span>
                                         </td>
+                                        <td>{renderPaymentState(job)}</td>
                                         <td className="table-cell-bold">{job.applicants?.length || 0}</td>
                                         <td>
                                             <div className="action-buttons">
@@ -410,11 +443,8 @@ const ManageJobs = () => {
                                 </div>
                                 <div>
                                     <span style={{ color: '#6B7280' }}>Status: </span>
-                                    <span className={`badge ${
-                                        selectedJob.status === 'Active' ? 'badge-green' : 
-                                        selectedJob.status === 'Completed' ? 'badge-blue' : 'badge-yellow'
-                                    }`}>
-                                        {selectedJob.status}
+                                    <span className={`badge ${getStatusBadgeClass(selectedJob.status)}`}>
+                                        {statusLabelMap[selectedJob.status] || selectedJob.status}
                                     </span>
                                 </div>
                             </div>
@@ -613,10 +643,10 @@ const ManageJobs = () => {
                                     className="form-select"
                                     required
                                 >
-                                    <option value="Active">Active</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="PAID">Paid</option>
                                 </select>
                             </div>
 
