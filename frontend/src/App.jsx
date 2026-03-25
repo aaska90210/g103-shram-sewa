@@ -24,13 +24,13 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import VerifyClients from './pages/admin/VerifyClients';
 import VerifyFreelancers from './pages/admin/VerifyFreelancers';
 import AllUsers from './pages/admin/AllUsers';
-<<<<<<< Updated upstream
+
 import toast from 'react-hot-toast';
 
 <Toaster position="top-right" />
-=======
+
 import PaymentSuccess from './pages/payment/paymentSuccess';
->>>>>>> Stashed changes
+
 
 import './App.css';
 

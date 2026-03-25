@@ -1,5 +1,5 @@
 import { Download, Calendar } from 'lucide-react';
-<<<<<<< Updated upstream
+
 import toast from "react-hot-toast";
 
 const handlePayment = async () => {
@@ -24,11 +24,11 @@ const payments = [
     { id: 4, job: 'Paint Living Room', worker: 'Manoj Verma', amount: '₹5,500', status: 'Pending', date: 'Mar 5, 2026', paymentId: 'PAY004' },
     { id: 5, job: 'Carpenter for Wardrobe', worker: 'Vikram Singh', amount: '₹5,500', status: 'Pending', date: 'Mar 6, 2026', paymentId: 'PAY005' },
 ];
-=======
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
->>>>>>> Stashed changes
+
 
 const PaymentHistory = () => {
     const [payments, setPayments] = useState([]);
