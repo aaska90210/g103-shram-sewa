@@ -2,7 +2,6 @@ import { Briefcase, Clock, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useState } from 'react';
 
 // Start Task
 const startTask = () => {
