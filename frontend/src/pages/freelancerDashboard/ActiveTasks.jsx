@@ -36,10 +36,9 @@ const ActiveTasks = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                // Filter only Approved applications which represent active tasks
-                // You might also want to check if jobStatus is 'Active'
+                // Filter only approved applications whose job is in progress
                 const activeTasks = response.data.filter(
-                    app => app.status === 'Approved' && app.jobStatus !== 'Completed'
+                    (app) => app.status === 'Approved' && app.jobStatus === 'IN_PROGRESS'
                 );
 
                 setTasks(activeTasks);
@@ -70,11 +69,30 @@ const ActiveTasks = () => {
     };
 
     // === Mark Task as Complete ===
-    const handleComplete = (taskId) => {
-        // TODO: Implement API call to mark task as complete
-        const confirmed = window.confirm('Are you sure you want to mark this task as complete?');
-        if (confirmed) {
-            alert('Task marked as complete! (API integration pending)');
+    const handleComplete = async (taskId) => {
+        const confirmed = window.confirm('Mark this task as complete?');
+        if (!confirmed) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error('Please login first');
+                return;
+            }
+
+            await axios.patch(
+                `http://localhost:5000/api/jobs/${taskId}/complete`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            toast.success('Task marked as COMPLETED');
+            // Remove from active list and let client handle payment
+            setTasks((prev) => prev.filter((t) => t._id !== taskId));
+        } catch (error) {
+            console.error('Error completing task:', error);
+            const message = error.response?.data?.message || 'Failed to complete task';
+            toast.error(message);
         }
     };
 
@@ -141,7 +159,7 @@ const ActiveTasks = () => {
                                     </p>
                                 </div>
                                 <span className="badge badge-blue">
-                                    {task.status === 'Approved' ? 'In Progress' : task.status}
+                                    {task.jobStatus === 'IN_PROGRESS' ? 'In Progress' : task.jobStatus}
                                 </span>
                             </div>
 
