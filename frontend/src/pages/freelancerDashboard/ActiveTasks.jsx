@@ -2,6 +2,23 @@ import { Briefcase, Clock, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
+import toast from "react-hot-toast";
+
+// Start Task
+const startTask = () => {
+  toast("Task started ");
+};
+
+// Complete Task
+const completeTask = () => {
+  toast.success("Task completed ");
+};
+
+// Cancel Task
+const cancelTask = () => {
+  toast.error("Task cancelled ");
+};
 
 const ActiveTasks = () => {
     // === Active Tasks Data ===

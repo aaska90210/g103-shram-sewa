@@ -1,4 +1,19 @@
 import { Download, Calendar } from 'lucide-react';
+import toast from "react-hot-toast";
+
+const handlePayment = async () => {
+  const loading = toast.loading("Processing payment...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.success("Payment successful ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Payment failed ");
+  }
+};
 
 // static payment data
 const payments = [

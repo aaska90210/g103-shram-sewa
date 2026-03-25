@@ -3,6 +3,37 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+
+// Accept booking
+const handleAccept = async (id) => {
+  const loading = toast.loading("Accepting...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.success("Booking accepted ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Failed to accept ");
+  }
+};
+
+// Reject booking
+const handleReject = async (id) => {
+  const loading = toast.loading("Rejecting...");
+
+  try {
+
+    toast.dismiss(loading);
+    toast.error("Booking rejected ");
+
+  } catch (error) {
+    toast.dismiss(loading);
+    toast.error("Failed to reject ");
+  }
+};
+
 const ManageJobs = () => {
     // State for jobs data
     const [jobs, setJobs] = useState([]);

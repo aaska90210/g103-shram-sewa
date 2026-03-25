@@ -24,6 +24,9 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import VerifyClients from './pages/admin/VerifyClients';
 import VerifyFreelancers from './pages/admin/VerifyFreelancers';
 import AllUsers from './pages/admin/AllUsers';
+import toast from 'react-hot-toast';
+
+<Toaster position="top-right" />
 
 import './App.css';
 
@@ -94,4 +97,10 @@ function App() {
   );
 }
 
+const loading = toast.loading("Processing...");
+
+setTimeout(() => {
+  toast.dismiss(loading);
+  toast.success("Done ");
+}, 2000);
 export default App;
