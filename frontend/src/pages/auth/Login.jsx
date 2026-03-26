@@ -112,19 +112,3 @@ const Login = () => {
 };
 
 export default Login;
-
-const handleLogin = async (e) => {
-  e.preventDefault();
-
-  const loading = toast.loading("Logging in...");
-
-  try {
-
-    toast.dismiss(loading);
-    toast.success("Login successful ");
-
-  } catch (error) {
-    toast.dismiss(loading);
-    toast.error("Invalid email or password ");
-  }
-};
