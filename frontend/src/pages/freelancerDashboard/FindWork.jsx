@@ -1,30 +1,25 @@
-import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
+import { Search, MapPin, Briefcase, Filter, Navigation } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const CATEGORIES = ['Electrician', 'Plumber', 'Painter', 'Carpenter', 'Mason', 'Cleaner', 'Makeup'];
 
-const handleApply = async (jobId) => {
-  const loading = toast.loading("Applying...");
-
-  try {
-
-    toast.dismiss(loading);
-    toast.success("Application submitted ");
-
-  } catch (error) {
-    toast.dismiss(loading);
-    toast.error("Failed to apply ");
-  }
-};
 const FindWork = () => {
     // === State Management ===
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+    
+    // === New State: Location & Bidding ===
+    const [nearMe, setNearMe] = useState(false);
+    const [locating, setLocating] = useState(false);
+    const [showApplyModal, setShowApplyModal] = useState(false);
+    const [applyTarget, setApplyTarget] = useState(null);
+    const [applyForm, setApplyForm] = useState({ bidAmount: '', message: '' });
 
-    // Get user info for verification check
+    // === User Verification Check ===
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isVerified = user.verificationStatus === 'Verified';
 
@@ -37,6 +32,7 @@ const FindWork = () => {
     const fetchJobs = async () => {
         try {
             setLoading(true);
+            setNearMe(false); // Reset near me status when fetching all jobs
             
             // Fetch all active jobs from backend
             const response = await axios.get('http://localhost:5000/api/jobs?status=Active');
@@ -50,6 +46,38 @@ const FindWork = () => {
         }
     };
 
+    // === Location Based Search ===
+    // Uses browser geolocation to find jobs within 10km
+    const handleNearMe = () => {
+        if (!navigator.geolocation) { 
+            toast.error('Geolocation not supported by your browser'); 
+            return; 
+        }
+        
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude: lat, longitude: lng } = pos.coords;
+                    const res = await axios.get(`http://localhost:5000/api/jobs/nearby?lat=${lat}&lng=${lng}&km=10`);
+                    
+                    setJobs(res.data);
+                    setNearMe(true);
+                    toast.success(`Found ${res.data.length} jobs within 10km`);
+                } catch (error) { 
+                    console.error('Error fetching nearby jobs:', error);
+                    toast.error('Failed to fetch nearby jobs'); 
+                } finally { 
+                    setLocating(false); 
+                }
+            },
+            () => { 
+                toast.error('Location access denied. Please allow location in browser settings.'); 
+                setLocating(false); 
+            }
+        );
+    };
+
     // === Filter Jobs ===
     // Filters jobs based on search term and category
     const filteredJobs = jobs.filter(job => {
@@ -59,9 +87,18 @@ const FindWork = () => {
         return matchesSearch && matchesCategory;
     });
 
-    // === Apply for Job ===
-    // Worker can apply/bid for a job
-    const handleApply = async (jobId) => {
+    // === Apply for Job Modal Handlers ===
+    const openApplyModal = (job) => {
+        if (!isVerified) { 
+            toast.error('Account not verified. You cannot apply yet.'); 
+            return; 
+        }
+        setApplyTarget(job);
+        setApplyForm({ bidAmount: '', message: '' });
+        setShowApplyModal(true);
+    };
+
+    const handleApplySubmit = async () => {
         try {
             const token = localStorage.getItem('token');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -78,8 +115,11 @@ const FindWork = () => {
 
             // Perform the API call to apply
             await axios.post(
-                `http://localhost:5000/api/jobs/${jobId}/apply`,
-                {},
+                `http://localhost:5000/api/jobs/${applyTarget._id}/apply`,
+                { 
+                    bidAmount: applyForm.bidAmount || null, 
+                    message: applyForm.message 
+                },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -88,6 +128,7 @@ const FindWork = () => {
             );
 
             toast.success('Application submitted successfully!');
+            setShowApplyModal(false);
             
         } catch (error) {
             console.error('Error applying for job:', error);
@@ -139,15 +180,47 @@ const FindWork = () => {
                             className="form-select"
                         >
                             <option value="">All Categories</option>
-                            <option value="Electrician">Electrician</option>
-                            <option value="Plumber">Plumber</option>
-                            <option value="Painter">Painter</option>
-                            <option value="Carpenter">Carpenter</option>
-                            <option value="Mason">Mason</option>
-                            <option value="Cleaner">Home Cleaner</option>
-                            <option value="Makeup">MUA</option>
+                            {CATEGORIES.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
                         </select>
                     </div>
+                </div>
+
+                {/* Location Search Buttons */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    <button 
+                        onClick={fetchJobs} 
+                        className="btn btn-secondary" 
+                        style={{ fontSize: '14px' }}
+                    >
+                        All Jobs
+                    </button>
+                    <button
+                        onClick={handleNearMe}
+                        disabled={locating}
+                        style={{
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px', 
+                            fontSize: '14px',
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            border: 'none', 
+                            cursor: locating ? 'not-allowed' : 'pointer',
+                            background: nearMe ? '#059669' : '#A41F39', 
+                            color: 'white', 
+                            fontWeight: '500'
+                        }}
+                    >
+                        <Navigation size={16} />
+                        {locating ? 'Locating...' : nearMe ? 'Showing Near Me ✓' : 'Jobs Near Me'}
+                    </button>
+                    {nearMe && (
+                        <span style={{ fontSize: '13px', color: '#6B7280', alignSelf: 'center' }}>
+                            Within 10km of your location
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -159,7 +232,12 @@ const FindWork = () => {
             ) : filteredJobs.length === 0 ? (
                 <div className="table-card">
                     <div style={{ padding: '2rem', textAlign: 'center' }}>
-                        <p>No jobs found matching your criteria.</p>
+                        <p>{nearMe ? 'No jobs found near your location.' : 'No jobs found matching your criteria.'}</p>
+                        {nearMe && (
+                            <button onClick={fetchJobs} className="btn btn-secondary" style={{ marginTop: '12px' }}>
+                                Show All Jobs
+                            </button>
+                        )}
                     </div>
                 </div>
             ) : (
@@ -177,15 +255,22 @@ const FindWork = () => {
                                         {job.category}
                                     </p>
                                 </div>
-                                <span className="badge badge-green" style={{ alignSelf: 'flex-start' }}>
-                                    {job.status}
-                                </span>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                    <span className="badge badge-green">
+                                        {job.status}
+                                    </span>
+                                    {job.coordinates?.coordinates && (
+                                        <span style={{ fontSize: '11px', color: '#059669', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                            <Navigation size={10} /> Pinned
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Job Details */}
                             <div style={{ margin: '1rem 0' }}>
                                 <p style={{ fontSize: '0.875rem', color: '#374151', lineHeight: '1.5' }}>
-                                    {job.description.substring(0, 120)}...
+                                    {job.description.length > 120 ? job.description.substring(0, 120) + '...' : job.description}
                                 </p>
                             </div>
 
@@ -204,25 +289,114 @@ const FindWork = () => {
                                         {formatBudget(job.budget)}
                                     </span>
                                 </div>
+                                <div className="worker-stat-row">
+                                    <span className="worker-stat-label">Posted by</span>
+                                    <span className="worker-stat-value">{job.postedBy?.fullName || 'Client'}</span>
+                                </div>
                             </div>
 
                             {/* Apply Button */}
                             <button
-                                onClick={() => handleApply(job._id)}
+                                onClick={() => openApplyModal(job)}
                                 className="worker-action"
-                                style={{ 
-                                    marginTop: '1rem',
-                                    opacity: isVerified ? 1 : 0.6,
-                                    cursor: isVerified ? 'pointer' : 'not-allowed',
-                                    backgroundColor: isVerified ? '' : '#ccc'
-                                }}
                                 disabled={!isVerified}
-                                title={!isVerified ? 'You must be verified to apply' : ''}
+                                style={{ 
+                                    marginTop: '1rem', 
+                                    opacity: isVerified ? 1 : 0.6, 
+                                    cursor: isVerified ? 'pointer' : 'not-allowed' 
+                                }}
                             >
                                 {isVerified ? 'Apply Now' : 'Verification Pending'}
                             </button>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* === Apply Modal === */}
+            {showApplyModal && applyTarget && (
+                <div style={{ 
+                    position: 'fixed', 
+                    inset: 0, 
+                    background: 'rgba(0,0,0,0.5)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    zIndex: 1000 
+                }}>
+                    <div style={{ 
+                        background: 'white', 
+                        borderRadius: '1rem', 
+                        padding: '2rem', 
+                        maxWidth: '440px', 
+                        width: '90%' 
+                    }}>
+                        <h2 style={{ margin: '0 0 6px' }}>Apply for Job</h2>
+                        <p style={{ margin: '0 0 1.5rem', color: '#6B7280', fontSize: '14px' }}>
+                            {applyTarget.title} · {formatBudget(applyTarget.budget)}
+                        </p>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>
+                                Your Bid (NPR) <span style={{ color: '#9ca3af', fontWeight: '400' }}>optional</span>
+                            </label>
+                            <input
+                                type="number"
+                                placeholder={`Leave blank to accept Rs. ${Number(applyTarget.budget).toLocaleString('en-IN')}`}
+                                value={applyForm.bidAmount}
+                                onChange={e => setApplyForm({ ...applyForm, bidAmount: e.target.value })}
+                                style={{ 
+                                    width: '100%', 
+                                    padding: '10px 12px', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid #e5e7eb', 
+                                    fontSize: '14px', 
+                                    boxSizing: 'border-box' 
+                                }}
+                                min="0"
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ fontSize: '14px', fontWeight: '500', display: 'block', marginBottom: '6px' }}>
+                                Message to Client <span style={{ color: '#9ca3af', fontWeight: '400' }}>optional</span>
+                            </label>
+                            <textarea
+                                placeholder="Briefly describe your experience or why you're a good fit..."
+                                value={applyForm.message}
+                                onChange={e => setApplyForm({ ...applyForm, message: e.target.value })}
+                                style={{ 
+                                    width: '100%', 
+                                    minHeight: '80px', 
+                                    padding: '10px 12px', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid #e5e7eb', 
+                                    fontSize: '14px', 
+                                    resize: 'vertical', 
+                                    fontFamily: 'inherit', 
+                                    boxSizing: 'border-box' 
+                                }}
+                                maxLength={300}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                                onClick={() => setShowApplyModal(false)} 
+                                className="btn btn-secondary" 
+                                style={{ flex: 1 }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleApplySubmit} 
+                                className="btn btn-primary" 
+                                style={{ flex: 1 }}
+                            >
+                                Submit Application
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

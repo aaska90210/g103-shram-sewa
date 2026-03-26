@@ -24,13 +24,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import VerifyClients from './pages/admin/VerifyClients';
 import VerifyFreelancers from './pages/admin/VerifyFreelancers';
 import AllUsers from './pages/admin/AllUsers';
-
-import toast from 'react-hot-toast';
-
-<Toaster position="top-right" />
-
 import PaymentSuccess from './pages/payment/paymentSuccess';
-
 
 import './App.css';
 
@@ -98,16 +92,10 @@ function App() {
         </Route>
 
         <Route path="/payment-success" element={<PaymentSuccess />} />
-<Route path="/payment-failure" element={<div>Payment Failed. Please try again.</div>} />
+        <Route path="/payment-failure" element={<div>Payment Failed. Please try again.</div>} />
       </Routes>
     </Router>
   );
 }
 
-const loading = toast.loading("Processing...");
-
-setTimeout(() => {
-  toast.dismiss(loading);
-  toast.success("Done ");
-}, 2000);
 export default App;
