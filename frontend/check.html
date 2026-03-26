@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ShramSewa</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(to right, #020617, #0f172a);
+  color: white;
+}
+
+/* LOGO */
+.navbar {
+  padding: 15px 40px;
+  font-size: 24px;
+  font-weight: bold;
+}
+.navbar span:first-child {
+  color: white;
+}
+.navbar span:last-child {
+  color: orange;
+}
+
+/* HERO */
+.hero {
+  margin-top: 60px;
+  text-align: center;
+}
+
+/* NEW TOP LABEL */
+.top-label {
+  color: orange;
+  font-weight: bold;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.hero h1 {
+  font-size: 45px;
+}
+
+.subtitle {
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+/* SEARCH BOX */
+.search-box {
+  margin: 30px auto 10px;
+  padding: 25px;
+  background: #111827;
+  border-radius: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: fit-content;
+  box-shadow: 0 0 20px rgba(255,165,0,0.2);
+}
+
+input {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #020617;
+  color: white;
+  font-size: 15px;
+  width: 180px;
+}
+
+button {
+  background: orange;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* READY TEXT */
+.ready {
+  text-align: center;
+  margin-top: 15px;
+  opacity: 0.7;
+}
+
+/* RESULTS */
+#results {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: #111827;
+  padding: 20px;
+  border-radius: 12px;
+  width: 220px;
+  box-shadow: 0 0 10px rgba(255,165,0,0.15);
+}
+
+/* ALERT */
+.alert {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  padding: 12px 25px;
+  border-radius: 8px;
+  display: none;
+}
+
+/* FEATURES */
+.features {
+  margin-top: 80px;
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+}
+
+.feature {
+  text-align: center;
+  opacity: 0.8;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- ALERT -->
+<div class="alert" id="alertBox">⚠️ Please fill at least one field</div>
+
+<!-- LOGO -->
+<div class="navbar">
+  <span>Shram</span><span>Sewa</span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+
+  <div class="top-label">Nepal’s Worker Platform</div>
+
+  <h1>Find <span style="color:orange;">Skilled Workers</span><br>Near You</h1>
+
+  <div class="subtitle">Select a skill and location below, then hit Search.</div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-box">
+  <input id="skill" placeholder="Enter skill">
+  <input id="location" placeholder="Enter location">
+  <button onclick="search()">Search</button>
+</div>
+
+<!-- READY TEXT -->
+<div class="ready">🔍 Ready to find Workers!</div>
+
+<!-- RESULTS -->
+<div id="results"></div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="feature">👷‍♂️<br>Trusted Workers</div>
+  <div class="feature">⚡<br>Fast Search</div>
+  <div class="feature">📍<br>Local Services</div>
+</div>
+
+<script>
+
+const API = "http://localhost:3000";
+
+function showAlert() {
+  const box = document.getElementById("alertBox");
+  box.style.display = "block";
+  setTimeout(() => {
+    box.style.display = "none";
+  }, 2000);
+}
+
+async function search() {
+
+  const skill = document.getElementById("skill").value.trim();
+  const location = document.getElementById("location").value.trim();
+
+  const results = document.getElementById("results");
+
+  if (!skill && !location) {
+    showAlert();
+    return;
+  }
+
+  let url = `${API}/search?`;
+
+  if (skill) url += `skill=${skill}&`;
+  if (location) url += `location=${location}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  results.innerHTML = "";
+
+  if (data.length === 0) {
+    results.innerHTML = "<p>No workers found</p>";
+    return;
+  }
+
+  data.forEach(w => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${w.name}</h3>
+      <p>🔧 ${w.skill}</p>
+      <p>📍 ${w.location}</p>
+      <p>📞 ${w.phone}</p>
+      <p>⭐ ${w.rating}</p>
+    `;
+    results.appendChild(card);
+  });
+
+}
+
+</script>
+
+</body>
+</html>
