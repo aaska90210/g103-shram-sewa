@@ -9,6 +9,7 @@ import paymentRoutes from "./routes/payment.js";
 import userRoutes from "./routes/users.js";
 import reviewRoutes from "./routes/reviews.js";
 import notificationRoutes from "./routes/notifications.js";
+// import geoRoutes from './routes/location.js'; 
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/payment', paymentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
+// app.use('/api/location', geoRoutes); 
 
 // Test API
 app.get("/", (req, res) => {
