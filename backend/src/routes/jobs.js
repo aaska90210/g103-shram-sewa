@@ -1,6 +1,8 @@
 import express from 'express';
 import Job from '../models/Job.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -9,7 +11,7 @@ const router = express.Router();
 // @access  Private (Client only)
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { title, description, category, budget, location } = req.body;
+        const { title, description, category, budget, location, lat, lng } = req.body;
 
         // Validate required fields
         if (!title || !description || !category || !budget || !location) {
@@ -21,21 +23,31 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(403).json({ message: 'Only clients can post jobs' });
         }
 
-        // Check if client is verified
+        // Check verification status
         if (req.user.verificationStatus !== 'Verified') {
-            return res.status(403).json({ message: 'Your account is not verified. Please wait for admin approval to post jobs.' });
+            return res.status(403).json({ message: 'Your account must be verified to post jobs.' });
         }
 
-        // Create new job
-        const job = new Job({
+        // Create new job data object
+        const jobData = {
             title,
             description,
             category,
             budget: Number(budget),
             location,
             postedBy: req.user._id
-        });
+        };
 
+        // Add coordinates if provided
+        if (lat && lng) {
+            jobData.coordinates = {
+                type: 'Point',
+                coordinates: [parseFloat(lng), parseFloat(lat)]
+            };
+        }
+
+        // Create new job
+        const job = new Job(jobData);
         await job.save();
 
         res.status(201).json({
@@ -72,36 +84,30 @@ router.get('/', async (req, res) => {
     }
 });
 
-// @route   PATCH /api/jobs/:id/complete
-// @desc    Mark a job as completed (hirer or approved freelancer)
-// @access  Private
-router.patch('/:id/complete', authMiddleware, async (req, res) => {
+// @route   GET /api/jobs/nearby
+// @desc    Get jobs based on geolocation proximity
+// @access  Public
+router.get('/nearby', async (req, res) => {
     try {
-        const job = await Job.findById(req.params.id);
+        const { lat, lng, km = 10 } = req.query;
 
-        if (!job) {
-            return res.status(404).json({ message: 'Job not found' });
+        if (!lat || !lng) {
+            return res.status(400).json({ message: 'lat and lng are required' });
         }
 
-        const isOwner = job.postedBy.toString() === req.user._id.toString();
-        const isApprovedFreelancer = job.applicants?.some(
-            (applicant) =>
-                applicant.userId.toString() === req.user._id.toString() &&
-                applicant.status === 'Approved'
-        );
+        const jobs = await Job.find({
+            status: 'Active',
+            coordinates: {
+                $near: {
+                    $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+                    $maxDistance: parseFloat(km) * 1000
+                }
+            }
+        })
+        .populate('postedBy', 'fullName email')
+        .limit(30);
 
-        if (!isOwner && !isApprovedFreelancer) {
-            return res.status(403).json({ message: 'Not authorized to complete this job' });
-        }
-
-        if (job.status !== 'IN_PROGRESS') {
-            return res.status(400).json({ message: 'Job must be IN_PROGRESS before completion' });
-        }
-
-        job.status = 'COMPLETED';
-        await job.save();
-
-        res.json({ message: 'Job marked as COMPLETED', job });
+        res.json(jobs);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -140,7 +146,7 @@ router.get('/my-applications', authMiddleware, async (req, res) => {
         .populate('postedBy', 'fullName email')
         .sort({ createdAt: -1 });
 
-        // Transform to include application status
+        // Transform to include application status and new fields
         const applications = jobs.map(job => {
             const applicant = job.applicants.find(
                 app => app.userId.toString() === req.user._id.toString()
@@ -155,6 +161,8 @@ router.get('/my-applications', authMiddleware, async (req, res) => {
                 client: job.postedBy.fullName,
                 clientEmail: job.postedBy.email,
                 status: applicant.status,
+                bidAmount: applicant.bidAmount,
+                message: applicant.message,
                 appliedAt: applicant.appliedAt,
                 jobStatus: job.status
             };
@@ -196,6 +204,8 @@ router.get('/:id', async (req, res) => {
             rating: app.userId.rating,
             completedJobs: app.userId.completedJobs,
             status: app.status,
+            bidAmount: app.bidAmount,
+            message: app.message,
             appliedAt: app.appliedAt
         }));
 
@@ -222,7 +232,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to update this job' });
         }
 
-        const { title, description, category, budget, location, status } = req.body;
+        const { title, description, category, budget, location, status, lat, lng } = req.body;
 
         // Update fields
         if (title) job.title = title;
@@ -231,11 +241,63 @@ router.put('/:id', authMiddleware, async (req, res) => {
         if (budget) job.budget = Number(budget);
         if (location) job.location = location;
         if (status) job.status = status;
+        
+        // Update coordinates if provided
+        if (lat && lng) {
+            job.coordinates = { 
+                type: 'Point', 
+                coordinates: [parseFloat(lng), parseFloat(lat)] 
+            };
+        }
 
         await job.save();
 
         res.json({
             message: 'Job updated successfully',
+            job
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   POST /api/jobs/:id/complete
+// @desc    Mark a job as completed
+// @access  Private (Job owner only)
+router.post('/:id/complete', authMiddleware, async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // Check if user is the job owner
+        if (job.postedBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Only the job poster can mark it complete' });
+        }
+
+        if (job.status === 'Completed') {
+            return res.status(400).json({ message: 'Job is already completed' });
+        }
+
+        job.status = 'Completed';
+        await job.save();
+
+        // Notify all approved freelancers
+        const approvedWorkers = job.applicants.filter(a => a.status === 'Approved');
+        for (const worker of approvedWorkers) {
+            await Notification.create({
+                user: worker.userId,
+                type: 'completed',
+                message: `Job "${job.title}" has been marked as completed. You can now receive a review.`,
+                link: '/worker/active-tasks'
+            });
+        }
+
+        res.json({
+            message: 'Job marked as completed',
             job
         });
     } catch (error) {
@@ -301,6 +363,14 @@ router.post('/:id/approve/:applicantId', authMiddleware, async (req, res) => {
         }
         await job.save();
 
+        // Notify the approved freelancer
+        await Notification.create({
+            user: req.params.applicantId,
+            type: 'approved',
+            message: `Your application for "${job.title}" has been approved!`,
+            link: '/worker/active-tasks'
+        });
+
         res.json({
             message: 'Applicant approved successfully',
             job
@@ -340,6 +410,14 @@ router.post('/:id/reject/:applicantId', authMiddleware, async (req, res) => {
         applicant.status = 'Rejected';
         await job.save();
 
+        // Notify the rejected freelancer
+        await Notification.create({
+            user: req.params.applicantId,
+            type: 'rejected',
+            message: `Your application for "${job.title}" was not selected.`,
+            link: '/worker/applications'
+        });
+
         res.json({
             message: 'Applicant rejected successfully',
             job
@@ -355,6 +433,7 @@ router.post('/:id/reject/:applicantId', authMiddleware, async (req, res) => {
 // @access  Private (Worker only)
 router.post('/:id/apply', authMiddleware, async (req, res) => {
     try {
+        const { bidAmount, message } = req.body;
         const job = await Job.findById(req.params.id);
 
         if (!job) {
@@ -366,9 +445,9 @@ router.post('/:id/apply', authMiddleware, async (req, res) => {
             return res.status(403).json({ message: 'Only freelancers can apply for jobs' });
         }
 
-        // Check if freelancer is verified
+        // Check verification status
         if (req.user.verificationStatus !== 'Verified') {
-            return res.status(403).json({ message: 'Your account is not verified. Please wait for admin approval to apply for jobs.' });
+            return res.status(403).json({ message: 'Your account must be verified to apply.' });
         }
 
         // Check if user is the job owner
@@ -388,10 +467,20 @@ router.post('/:id/apply', authMiddleware, async (req, res) => {
         // Add applicant
         job.applicants.push({
             userId: req.user._id,
-            status: 'Pending'
+            status: 'Pending',
+            bidAmount: bidAmount ? Number(bidAmount) : null,
+            message: message || ''
         });
 
         await job.save();
+
+        // Notify the hirer
+        await Notification.create({
+            user: job.postedBy,
+            type: 'application',
+            message: `${req.user.fullName} applied for your job "${job.title}"`,
+            link: '/hirer/manage-jobs'
+        });
 
         res.json({
             message: 'Application submitted successfully',

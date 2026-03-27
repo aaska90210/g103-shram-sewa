@@ -23,10 +23,21 @@ const jobSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    coordinates: {
+        type: { 
+            type: String, 
+            enum: ['Point'], 
+            default: 'Point' 
+        },
+        coordinates: { 
+            type: [Number], 
+            default: undefined 
+        }
+    },
     status: {
         type: String,
-        enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'PAID'],
-        default: 'PENDING'
+        enum: ['Active', 'Completed', 'Pending', 'Cancelled', 'IN_PROGRESS', 'PENDING', 'PAID'],
+        default: 'Active'
     },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +55,15 @@ const jobSchema = new mongoose.Schema({
             enum: ['Pending', 'Approved', 'Rejected'],
             default: 'Pending'
         },
+        bidAmount: {
+            type: Number,
+            default: null
+        },
+        message: {
+            type: String,
+            default: '',
+            maxlength: 300
+        },
         appliedAt: {
             type: Date,
             default: Date.now
@@ -52,6 +72,8 @@ const jobSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+jobSchema.index({ coordinates: '2dsphere' });
 
 const Job = mongoose.model('Job', jobSchema);
 

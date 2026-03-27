@@ -2,23 +2,9 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Briefcase, MapPin, FileText, Tag } from 'lucide-react';
 import axios from 'axios';
+import MapPicker from '../../components/MapPicker';
 
 
-const handleRegister = async (e) => {
-  e.preventDefault();
-
-  const loading = toast.loading("Creating account...");
-
-  try {
-
-    toast.dismiss(loading);
-    toast.success("Account created successfully ");
-
-  } catch (error) {
-    toast.dismiss(loading);
-    toast.error("Registration failed ");
-  }
-};
 // Custom Nepali Rupees Icon Component
 const NepaliRupeeIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,6 +30,10 @@ const PostJob = () => {
 
     const [loading, setLoading] = useState(false);
     const [isCustomCategory, setIsCustomCategory] = useState(false);
+
+      // === Map State ===
+    const [pinCoords, setPinCoords] = useState(null);
+    const [showMap, setShowMap] = useState(false);
 
     // === Handle Input Changes ===
     // Updates the form state when user types in any field
@@ -85,10 +75,17 @@ const PostJob = () => {
                 return;
             }
 
+              // Prepare Payload (Add map coordinates)
+            const payload = { ...form };
+            if (pinCoords) {
+                payload.lat = pinCoords.lat;
+                payload.lng = pinCoords.lng;
+            }
+
             // Send job data to backend
             const response = await axios.post(
                 'http://localhost:5000/api/jobs',
-                form,
+                payload,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -98,8 +95,12 @@ const PostJob = () => {
             );
 
             toast.success('Job posted successfully!');
+
             // Reset form
             setForm({ title: '', description: '', budget: '', location: '', category: '' });
+            setPinCoords(null);
+            setShowMap(false);
+
         } catch (error) {
             console.error('Error posting job:', error);
             const message = error.response?.data?.message || 'Failed to post job. Please try again.';
@@ -262,6 +263,34 @@ const PostJob = () => {
                             />
                         </div>
                     </div>
+
+                     {/* === Map Pin Section === */}
+                    <div className="form-group">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <label className="form-label" style={{ margin: 0 }}>
+                                Pin Exact Location on Map
+                                <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 400, marginLeft: 6 }}>(optional but helps workers find you)</span>
+                            </label>
+                            <button 
+                                type="button" 
+                                onClick={() => setShowMap(!showMap)} 
+                                style={{ fontSize: 13, padding: '4px 12px', border: '1px solid #d1d5db', borderRadius: 6, background: showMap ? '#fee2e2' : 'white', cursor: 'pointer', color: '#374151' }}
+                            >
+                                {showMap ? 'Hide Map' : 'Open Map'}
+                            </button>
+                        </div>
+
+                        {showMap && (
+                            <MapPicker value={pinCoords} onChange={setPinCoords} height={260} />
+                        )}
+
+                        {pinCoords && (
+                            <div style={{ marginTop: 6, padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, fontSize: 13, color: '#166534' }}>
+                                ✓ Location pinned: {pinCoords.lat.toFixed(4)}, {pinCoords.lng.toFixed(4)}
+                            </div>
+                        )}
+                    </div>
+
 
                     {/* === Description Textarea (1-column layout) === */}
                     {/* Large text area for detailed job requirements */}
