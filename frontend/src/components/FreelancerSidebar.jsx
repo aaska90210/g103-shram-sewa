@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Search, FileText, Briefcase, Wallet, User, ShieldCheck, Clock } from 'lucide-react';
+import { LayoutDashboard, Search, FileText, Briefcase, Wallet, User, ShieldCheck, Clock, Calendar } from 'lucide-react';
 
 // === Sidebar Navigation Links for Freelancer/Worker ===
 // These links are specific to the worker role
@@ -9,6 +9,7 @@ const navItems = [
     { path: '/worker/find-work', label: 'Find Work', icon: Search },
     { path: '/worker/applications', label: 'My Applications', icon: FileText },
     { path: '/worker/active-tasks', label: 'Active Tasks', icon: Briefcase },
+    { path: '/worker/availability', label: 'Availability', icon: Calendar },
     { path: '/worker/earnings', label: 'Earnings', icon: Wallet },
     { path: '/worker/profile', label: 'My Profile', icon: User },
 ];

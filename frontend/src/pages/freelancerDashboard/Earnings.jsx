@@ -1,54 +1,78 @@
 import { Download, Calendar, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Earnings = () => {
-    // === Earnings Summary Data ===
-    const earningsSummary = {
-        totalEarned: 56500,
-        thisMonth: 15000,
-        pending: 13500,
-        lastPayout: '2026-03-01'
-    };
+    const [transactions, setTransactions] = useState([]);
+    const [summary, setSummary] = useState({ totalEarned: 0, thisMonth: 0, pending: 0, lastPayout: null });
+    const [loading, setLoading] = useState(true);
 
-    // === Transaction History ===
-    const [transactions] = useState([
-        { 
-            id: 1, 
-            jobTitle: 'Fix Kitchen Plumbing', 
-            client: 'Ramesh Kumar', 
-            amount: 3500, 
-            status: 'Paid', 
-            date: '2026-02-28',
-            paymentId: 'PAY00123'
-        },
-        { 
-            id: 2, 
-            jobTitle: 'Electrical Wiring - 2BHK', 
-            client: 'Anita Sharma', 
-            amount: 8000, 
-            status: 'Pending', 
-            date: '2026-03-06',
-            paymentId: 'PAY00124'
-        },
-        { 
-            id: 3, 
-            jobTitle: 'Home Deep Cleaning', 
-            client: 'Vikram Singh', 
-            amount: 2000, 
-            status: 'Paid', 
-            date: '2026-02-25',
-            paymentId: 'PAY00125'
-        },
-        { 
-            id: 4, 
-            jobTitle: 'Paint Living Room', 
-            client: 'Suresh Patil', 
-            amount: 5500, 
-            status: 'Pending', 
-            date: '2026-03-05',
-            paymentId: 'PAY00126'
-        },
-    ]);
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    toast.error('Please login first');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await axios.get('http://localhost:5000/api/jobs/my-applications', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const paid = [];
+                const pending = [];
+
+                response.data.forEach((app) => {
+                    const record = {
+                        id: app._id,
+                        jobTitle: app.jobTitle,
+                        client: app.client,
+                        amount: app.budget,
+                        status: app.jobStatus === 'PAID' ? 'Paid' : 'Pending',
+                        date: app.appliedAt,
+                        paymentId: app._id
+                    };
+
+                    if (app.jobStatus === 'PAID') paid.push(record);
+                    if (app.jobStatus === 'COMPLETED') pending.push(record);
+                });
+
+                const allTx = [...paid, ...pending];
+                setTransactions(allTx);
+
+                const totalEarned = paid.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+                const now = new Date();
+                const thisMonth = paid
+                    .filter((tx) => {
+                        if (!tx.date) return false;
+                        const d = new Date(tx.date);
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    })
+                    .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+                const pendingAmt = pending.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+                const lastPayout = paid.length
+                    ? paid
+                        .filter((tx) => tx.date)
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
+                    : null;
+
+                setSummary({ totalEarned, thisMonth, pending: pendingAmt, lastPayout });
+            } catch (error) {
+                console.error('Error loading earnings:', error);
+                toast.error('Failed to load earnings');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, []);
 
     // === Format Date ===
     const formatDate = (dateString) => {
@@ -64,6 +88,10 @@ const Earnings = () => {
     const formatAmount = (amount) => {
         return `Rs. ${Number(amount).toLocaleString('en-IN')}`;
     };
+
+    if (loading) {
+        return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading earnings...</div>;
+    }
 
     return (
         <div>
@@ -88,7 +116,7 @@ const Earnings = () => {
                         <p style={{ margin: 0, fontSize: '0.875rem', color: '#6B7280' }}>Total Earned</p>
                     </div>
                     <h3 style={{ margin: 0, fontSize: '1.875rem', fontWeight: 'bold', color: '#059669' }}>
-                        {formatAmount(earningsSummary.totalEarned)}
+                        {formatAmount(summary.totalEarned)}
                     </h3>
                 </div>
 
@@ -99,7 +127,7 @@ const Earnings = () => {
                         <p style={{ margin: 0, fontSize: '0.875rem', color: '#6B7280' }}>This Month</p>
                     </div>
                     <h3 style={{ margin: 0, fontSize: '1.875rem', fontWeight: 'bold', color: '#111827' }}>
-                        {formatAmount(earningsSummary.thisMonth)}
+                        {formatAmount(summary.thisMonth)}
                     </h3>
                 </div>
 
@@ -112,7 +140,7 @@ const Earnings = () => {
                         <p style={{ margin: 0, fontSize: '0.875rem', color: '#6B7280' }}>Pending</p>
                     </div>
                     <h3 style={{ margin: 0, fontSize: '1.875rem', fontWeight: 'bold', color: '#D97706' }}>
-                        {formatAmount(earningsSummary.pending)}
+                        {formatAmount(summary.pending)}
                     </h3>
                 </div>
 
@@ -122,10 +150,10 @@ const Earnings = () => {
                         Last Payout
                     </p>
                     <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: '#111827' }}>
-                        {formatDate(earningsSummary.lastPayout)}
+                        {summary.lastPayout ? formatDate(summary.lastPayout) : 'No payouts yet'}
                     </h3>
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#9CA3AF' }}>
-                        Next payout in 5 days
+                        {summary.lastPayout ? 'Next payout coming soon' : 'Complete jobs to receive payouts'}
                     </p>
                 </div>
             </div>
@@ -148,7 +176,14 @@ const Earnings = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {transactions.map((txn) => (
+                            {transactions.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'center', padding: '1rem', color: '#6B7280' }}>
+                                        No payments yet. Complete jobs and wait for client payment.
+                                    </td>
+                                </tr>
+                            ) : (
+                                transactions.map((txn) => (
                                 <tr key={txn.id}>
                                     <td style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                                         {txn.paymentId}
@@ -168,7 +203,8 @@ const Earnings = () => {
                                         </span>
                                     </td>
                                 </tr>
-                            ))}
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

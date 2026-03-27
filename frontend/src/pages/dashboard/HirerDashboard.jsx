@@ -17,7 +17,7 @@ const HirerDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState([
         { label: 'Total Jobs Posted', value: 0, icon: Briefcase, colorClass: 'stat-icon-blue' },
-        { label: 'Active Jobs', value: 0, icon: Clock, colorClass: 'stat-icon-red' },
+        { label: 'In Progress', value: 0, icon: Clock, colorClass: 'stat-icon-red' },
         { label: 'Completed Jobs', value: 0, icon: CheckCircle, colorClass: 'stat-icon-green' },
         { label: 'Total Spent', value: 'Rs. 0', icon: NepaliRupeeIcon, colorClass: 'stat-icon-purple' },
     ]);
@@ -53,16 +53,16 @@ const HirerDashboard = () => {
 
             // Calculate statistics
             const totalJobs = jobsData.length;
-            const activeJobs = jobsData.filter(job => job.status === 'Active').length;
-            const completedJobs = jobsData.filter(job => job.status === 'Completed').length;
+            const activeJobs = jobsData.filter(job => job.status === 'IN_PROGRESS').length;
+            const completedJobs = jobsData.filter(job => job.status === 'COMPLETED' || job.status === 'PAID').length;
             const totalSpent = jobsData
-                .filter(job => job.status === 'Completed')
-                .reduce((sum, job) => sum + job.budget, 0);
+                .filter(job => job.status === 'PAID')
+                .reduce((sum, job) => sum + (job.budget || 0), 0);
 
             // Update stats
             setStats([
                 { label: 'Total Jobs Posted', value: totalJobs, icon: Briefcase, colorClass: 'stat-icon-blue' },
-                { label: 'Active Jobs', value: activeJobs, icon: Clock, colorClass: 'stat-icon-red' },
+                { label: 'In Progress', value: activeJobs, icon: Clock, colorClass: 'stat-icon-red' },
                 { label: 'Completed Jobs', value: completedJobs, icon: CheckCircle, colorClass: 'stat-icon-green' },
                 { label: 'Total Spent', value: `Rs. ${totalSpent.toLocaleString('en-IN')}`, icon: NepaliRupeeIcon, colorClass: 'stat-icon-purple' },
             ]);
@@ -142,6 +142,26 @@ const HirerDashboard = () => {
     const hiringOverviewData = generateChartData();
     const jobCategoriesData = generateCategoryData();
     const recentJobs = jobs.slice(0, 4); // Show only last 4 jobs
+
+    const statusLabelMap = {
+        PENDING: 'Pending',
+        IN_PROGRESS: 'In Progress',
+        COMPLETED: 'Completed',
+        PAID: 'Paid'
+    };
+
+    const statusBadgeClass = (status) => {
+        switch (status) {
+            case 'IN_PROGRESS':
+                return 'badge-blue';
+            case 'COMPLETED':
+                return 'badge-blue';
+            case 'PAID':
+                return 'badge-green';
+            default:
+                return 'badge-yellow';
+        }
+    };
     return (
         <div>
             {/* === Page Header === */}
@@ -243,12 +263,8 @@ const HirerDashboard = () => {
                                                 <td className="table-cell-bold">{job.title}</td>
                                                 <td>{job.category}</td>
                                                 <td>
-                                                    {/* Colored badges: Green for Active, Blue for Completed, Yellow for Pending */}
-                                                    <span className={`badge ${
-                                                        job.status === 'Active' ? 'badge-green' : 
-                                                        job.status === 'Completed' ? 'badge-blue' : 'badge-yellow'
-                                                    }`}>
-                                                        {job.status}
+                                                    <span className={`badge ${statusBadgeClass(job.status)}`}>
+                                                        {statusLabelMap[job.status] || job.status}
                                                     </span>
                                                 </td>
                                                 <td className="table-cell-bold">{job.applicants?.length || 0}</td>

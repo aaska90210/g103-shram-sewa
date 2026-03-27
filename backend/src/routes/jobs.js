@@ -72,6 +72,42 @@ router.get('/', async (req, res) => {
     }
 });
 
+// @route   PATCH /api/jobs/:id/complete
+// @desc    Mark a job as completed (hirer or approved freelancer)
+// @access  Private
+router.patch('/:id/complete', authMiddleware, async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        const isOwner = job.postedBy.toString() === req.user._id.toString();
+        const isApprovedFreelancer = job.applicants?.some(
+            (applicant) =>
+                applicant.userId.toString() === req.user._id.toString() &&
+                applicant.status === 'Approved'
+        );
+
+        if (!isOwner && !isApprovedFreelancer) {
+            return res.status(403).json({ message: 'Not authorized to complete this job' });
+        }
+
+        if (job.status !== 'IN_PROGRESS') {
+            return res.status(400).json({ message: 'Job must be IN_PROGRESS before completion' });
+        }
+
+        job.status = 'COMPLETED';
+        await job.save();
+
+        res.json({ message: 'Job marked as COMPLETED', job });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // @route   GET /api/jobs/my-jobs
 // @desc    Get jobs posted by the logged-in user
 // @access  Private (Client only)
@@ -258,8 +294,11 @@ router.post('/:id/approve/:applicantId', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Applicant not found' });
         }
 
-        // Update applicant status
+        // Update applicant status and start job
         applicant.status = 'Approved';
+        if (job.status === 'PENDING') {
+            job.status = 'IN_PROGRESS';
+        }
         await job.save();
 
         res.json({

@@ -16,7 +16,8 @@ const userSchema = new mongoose.Schema({
   bio: { type: String },
   hourlyRate: { type: Number },
   rating: { type: Number, default: 0 },
-  completedJobs: { type: Number, default: 0 }
+  completedJobs: { type: Number, default: 0 },
+  unavailableDates: [{ type: String }]
 });
 
 const User = mongoose.model("User", userSchema);

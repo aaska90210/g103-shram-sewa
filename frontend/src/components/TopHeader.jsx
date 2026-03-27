@@ -1,8 +1,10 @@
 import { Search, Bell, ChevronDown, BadgeCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const TopHeader = () => {
+    const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const [userData, setUserData] = useState({ name: 'User', initial: 'U', isVerified: false });
 
@@ -51,6 +53,13 @@ const TopHeader = () => {
     };
 
     const { name, initial, isVerified } = userData;
+
+    const handleProfileNavigate = () => {
+        const role = localStorage.getItem('role');
+        const targetPath = role === 'Freelancer' ? '/worker/profile' : '/hirer/profile';
+        setShowDropdown(false);
+        navigate(targetPath);
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -102,9 +111,9 @@ const TopHeader = () => {
                     {/* dropdown menu */}
                     {showDropdown && (
                         <div className="header-profile-dropdown">
-                            <a href="#" className="dropdown-item">
+                            <button onClick={handleProfileNavigate} className="dropdown-item">
                                 Profile Settings
-                            </a>
+                            </button>
                             <a href="#" className="dropdown-item">
                                 Help & Support
                             </a>
